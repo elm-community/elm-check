@@ -13,7 +13,7 @@ import Trampoline exposing (Trampoline(..), trampoline)
 import ElmTest.Test as Test exposing (Test)
 import ElmTest.Assertion as Test
 import Random exposing (Seed)
-import List
+import Lazy.List
 
 {-| Analogous to `claim`. Will generate a given number of unit tests for given
 actual and expected statements. If a unit tests fails, `test` will also generate
@@ -59,11 +59,11 @@ test name actualStatement expectedStatement investigator numberOfTests seed =
                 shrunkenCounterExamples = investigator.shrinker counterExample
 
                 failingShrunkenCounterExamples =
-                  List.filter (\shrunk ->
+                  Lazy.List.keepIf (\shrunk ->
                       not (actualStatement shrunk == expectedStatement shrunk)
                   ) shrunkenCounterExamples
 
-            in case List.head failingShrunkenCounterExamples of
+            in case Lazy.List.head failingShrunkenCounterExamples of
               Nothing ->
                 Done (counterExample, currentNumberOfShrinks)
 
@@ -125,11 +125,11 @@ assert name predicate investigator numberOfTests seed =
                 shrunkenCounterExamples = investigator.shrinker counterExample
 
                 failingShrunkenCounterExamples =
-                  List.filter (\shrunk ->
+                  Lazy.List.keepIf (\shrunk ->
                       not (predicate shrunk)
                   ) shrunkenCounterExamples
 
-            in case List.head failingShrunkenCounterExamples of
+            in case Lazy.List.head failingShrunkenCounterExamples of
               Nothing ->
                 Done (counterExample, currentNumberOfShrinks)
 

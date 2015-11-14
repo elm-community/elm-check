@@ -67,7 +67,7 @@ signatures and you are better off ignoring them.*
 -- CORE LIBRARY IMPORTS --
 --------------------------
 
-import List
+import Lazy.List
 import Random     exposing (Seed, Generator)
 import Trampoline exposing (Trampoline(..), trampoline)
 
@@ -336,11 +336,11 @@ claim name actualStatement expectedStatement investigator =
 
                     -- failingShrunkenCounterExamples : List a
                     failingShrunkenCounterExamples =
-                      List.filter (\shrunk ->
+                      Lazy.List.keepIf (\shrunk ->
                         not (actualStatement shrunk == expectedStatement shrunk)
                       ) shrunkenCounterExamples
 
-                in case List.head failingShrunkenCounterExamples of
+                in case Lazy.List.head failingShrunkenCounterExamples of
                   Nothing ->
                     --------------------------------------------------------
                     -- Stopping Condition :
