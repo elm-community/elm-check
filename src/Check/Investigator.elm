@@ -8,11 +8,14 @@ a very slow process and is best paired with some sort of continuous integration
 service. Consider making your own, more general investigator generators when
 migrating from local to cloud-based.
 
+# Shrink
+@docs shrink
+
 # Investigator Definition
 @docs Investigator, investigator
 
 # Basic Investigator Generators
-@docs void, bool, order, int, float, percentage, char, ascii, unicode, string, maybe, result, list, array, tuple, tuple3, tuple4, tuple5, func, func2, func3, func4, func5
+@docs void, bool, order, random, int, rangeInt, float, percentage, char, upperCaseChar, lowerCaseChar, ascii, unicode, string, maybe, result, list, array, tuple, tuple3, tuple4, tuple5, func, func2, func3, func4, func5
 
 -}
 import Array  exposing (Array)
@@ -269,24 +272,28 @@ func invB =
     (Shrink.noShrink)
 
 
+{-|-}
 func2 : Investigator c -> Investigator (a -> b -> c)
 func2 invC =
   investigator
     (Random.Function.func2 invC.generator)
     (Shrink.noShrink)
 
+{-|-}
 func3 : Investigator d -> Investigator (a -> b -> c -> d)
 func3 invD =
   investigator
     (Random.Function.func3 invD.generator)
     (Shrink.noShrink)
 
+{-|-}
 func4 : Investigator e -> Investigator (a -> b -> c -> d -> e)
 func4 invE =
   investigator
     (Random.Function.func4 invE.generator)
     (Shrink.noShrink)
 
+{-|-}
 func5 : Investigator f -> Investigator (a -> b -> c -> d -> e -> f)
 func5 invF =
   investigator

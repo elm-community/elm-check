@@ -152,37 +152,45 @@ assert name predicate investigator numberOfTests seed =
           Test.suite name (shrinkTest :: tests)
 
 
+{-|-}
 test2 : String -> (a -> b -> c) -> (a -> b -> c) -> Investigator a -> Investigator b -> Int -> Seed -> Test
 test2 name actualStatement expectedStatement invA invB =
   test name (\(a, b) -> actualStatement a b) (\(a, b) -> expectedStatement a b) (tuple (invA, invB))
 
 
+{-|-}
 assert2 : String -> (a -> b -> Bool) -> Investigator a -> Investigator b -> Int -> Seed -> Test
 assert2 name predicate invA invB =
   assert name (\(a, b) -> predicate a b) (tuple (invA, invB))
 
+{-|-}
 test3 : String -> (a -> b -> c -> d) -> (a -> b -> c -> d) -> Investigator a -> Investigator b -> Investigator c -> Int -> Seed -> Test
 test3 name actualStatement expectedStatement invA invB invC =
   test name (\(a, b, c) -> actualStatement a b c) (\(a, b, c) -> expectedStatement a b c) (tuple3 (invA, invB, invC))
 
+{-|-}
 assert3 : String -> (a -> b -> c -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Int -> Seed -> Test
 assert3 name predicate invA invB invC =
   assert name (\(a, b, c) -> predicate a b c) (tuple3 (invA, invB, invC))
 
+{-|-}
 test4 : String -> (a -> b -> c -> d -> e) -> (a -> b -> c -> d -> e) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Int -> Seed -> Test
 test4 name actualStatement expectedStatement invA invB invC invD =
   test name (\(a, b, c, d) -> actualStatement a b c d) (\(a, b, c, d) -> expectedStatement a b c d) (tuple4 (invA, invB, invC, invD))
 
+{-|-}
 assert4 : String -> (a -> b -> c -> d -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Int -> Seed -> Test
 assert4 name predicate invA invB invC invD =
   assert name (\(a, b, c, d) -> predicate a b c d) (tuple4 (invA, invB, invC, invD))
 
 
+{-|-}
 test5 : String -> (a -> b -> c -> d -> e -> f) -> (a -> b -> c -> d -> e -> f) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Investigator e -> Int -> Seed -> Test
 test5 name actualStatement expectedStatement invA invB invC invD invE =
   test name (\(a, b, c, d, e) -> actualStatement a b c d e) (\(a, b, c, d, e) -> expectedStatement a b c d e) (tuple5 (invA, invB, invC, invD, invE))
 
 
+{-|-}
 assert5 : String -> (a -> b -> c -> d -> e -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Investigator e -> Int -> Seed -> Test
 assert5 name predicate invA invB invC invD invE =
   assert name (\(a, b, c, d, e) -> predicate a b c d e) (tuple5 (invA, invB, invC, invD, invE))

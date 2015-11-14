@@ -14,7 +14,7 @@ module Check where
 @docs Claim, Evidence, UnitEvidence, SuccessOptions, FailureOptions
 
 # Multi-arity claims
-@docs claim2True, claim2False, claim3, claim3True, claim3False, claim4, claim4True, claim4False, claim5, claim5True, claim5False
+@docs claim2, claim2True, claim2False, claim3, claim3True, claim3False, claim4, claim4True, claim4False, claim5, claim5True, claim5False
 
 # DSL
 
@@ -493,51 +493,62 @@ suite name claims =
 -- MULTI-ARITY CLAIMS --
 ------------------------
 
+{-|-}
 claim2 : String -> (a -> b -> c) -> (a -> b -> c) -> Investigator a -> Investigator b -> Claim
 claim2 name actualStatement expectedStatement specA specB =
   claim name (\(a, b) -> actualStatement a b) (\(a, b) -> expectedStatement a b) (tuple (specA, specB))
 
+{-|-}
 claim2True : String -> (a -> b -> Bool) -> Investigator a -> Investigator b -> Claim
 claim2True name predicate =
   claim2 name predicate (\_ _ -> True)
 
+{-|-}
 claim2False : String -> (a -> b -> Bool) -> Investigator a -> Investigator b -> Claim
 claim2False name predicate =
   claim2 name predicate (\_ _ -> False)
 
+{-|-}
 claim3 : String -> (a -> b -> c -> d) -> (a -> b -> c -> d) -> Investigator a -> Investigator b -> Investigator c -> Claim
 claim3 name actualStatement expectedStatement specA specB specC =
   claim name (\(a, b, c) -> actualStatement a b c) (\(a, b, c) -> expectedStatement a b c) (tuple3 (specA, specB, specC))
 
+{-|-}
 claim3True : String -> (a -> b -> c -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Claim
 claim3True name predicate =
   claim3 name predicate (\_ _ _ -> True)
 
+{-|-}
 claim3False : String -> (a -> b -> c -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Claim
 claim3False name predicate =
   claim3 name predicate (\_ _ _ -> False)
 
+{-|-}
 claim4 : String -> (a -> b -> c -> d -> e) -> (a -> b -> c -> d -> e) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Claim
 claim4 name actualStatement expectedStatement specA specB specC specD =
   claim name (\(a, b, c, d) -> actualStatement a b c d) (\(a, b, c, d) -> expectedStatement a b c d) (tuple4 (specA, specB, specC, specD))
 
+{-|-}
 claim4True : String -> (a -> b -> c -> d -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Claim
 claim4True name predicate =
   claim4 name predicate (\_ _ _ _ -> True)
 
+{-|-}
 claim4False : String -> (a -> b -> c -> d -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Claim
 claim4False name predicate =
   claim4 name predicate (\_ _ _ _ -> False)
 
-
+{-|-}
 claim5 : String -> (a -> b -> c -> d -> e -> f) -> (a -> b -> c -> d -> e -> f) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Investigator e -> Claim
 claim5 name actualStatement expectedStatement specA specB specC specD specE =
   claim name (\(a, b, c, d, e) -> actualStatement a b c d e) (\(a, b, c, d, e) -> expectedStatement a b c d e) (tuple5 (specA, specB, specC, specD, specE))
 
+{-|-}
 claim5True : String -> (a -> b -> c -> d -> e -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Investigator e -> Claim
 claim5True name predicate =
   claim5 name predicate (\_ _ _ _ _ -> True)
 
+{-|-}
 claim5False : String -> (a -> b -> c -> d -> e -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Investigator e -> Claim
 claim5False name predicate =
   claim5 name predicate (\_ _ _ _ _ -> False)
@@ -548,19 +559,24 @@ claim5False name predicate =
 -- DSL --
 ---------
 
+{-|-}
 that : ((a -> b) -> (a -> b) -> Investigator a -> Claim) -> (a -> b) -> ((a -> b) -> Investigator a -> Claim)
 that f x = f x
 
+{-|-}
 is : ((a -> b) -> Investigator a -> Claim) -> (a -> b) -> (Investigator a -> Claim)
 is f x = f x
 
+{-|-}
 for : (Investigator a -> Claim) -> Investigator a -> Claim
 for f x = f x
 
+{-|-}
 true : ((a -> Bool) -> (a -> Bool) -> Investigator a -> Claim) -> (a -> Bool) -> (Investigator a -> Claim)
 true f pred =
   f pred (always True)
 
+{-|-}
 false : ((a -> Bool) -> (a -> Bool) -> Investigator a -> Claim) -> (a -> Bool) -> (Investigator a -> Claim)
 false f pred =
   f pred (always False)
