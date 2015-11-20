@@ -10,8 +10,7 @@ module Check.Test where
 -}
 import Check.Investigator as Investigator exposing (Investigator, tuple, tuple3, tuple4, tuple5)
 import Trampoline exposing (Trampoline(..), trampoline)
-import ElmTest.Test as Test exposing (Test)
-import ElmTest.Assertion as Test
+import ElmTest as Test exposing (..)
 import Random exposing (Seed)
 import Lazy.List
 
