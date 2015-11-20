@@ -12,11 +12,11 @@
         "Check.Test"
     ],
     "dependencies": {
-        "NoRedInk/elm-random-extra": "1.0.0 <= v < 2.0.0",
-        "NoRedInk/elm-shrink": "1.0.1 <= v < 2.0.0",
-        "NoRedInk/elm-lazy-list": "1.0.0 <= v < 2.0.0",
-        "deadfoxygrandpa/Elm-Test": "1.0.4 <= v < 2.0.0",
-        "elm-lang/core": "2.0.0 <= v < 3.0.0"
+        "NoRedInk/elm-random-extra": "2.0.0 <= v < 3.0.0",
+        "NoRedInk/elm-shrink": "1.0.3 <= v < 2.0.0",
+        "NoRedInk/elm-lazy-list": "2.0.0 <= v < 3.0.0",
+        "deadfoxygrandpa/elm-test": "3.0.0 <= v < 4.0.0",
+        "elm-lang/core": "3.0.0 <= v < 4.0.0"
     },
-    "elm-version": "0.15.0 <= v < 0.16.0"
+    "elm-version": "0.16.0 <= v < 0.17.0"
 }
