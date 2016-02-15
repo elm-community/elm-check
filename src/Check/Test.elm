@@ -5,10 +5,13 @@ module Check.Test (evidenceToTest, test, assert, test2, test3, test4, test5, ass
 # Convert to tests
 @docs evidenceToTest
 
-# Generate unit tests
+# Deprecated functions
+Everything below this point will be removed in 3.0.0.
+
+## Generate unit tests
 @docs test, assert
 
-# Multi-arity
+## Multi-arity
 @docs test2, test3, test4, test5, assert2, assert3, assert4, assert5
 
 -}

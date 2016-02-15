@@ -42,6 +42,9 @@ type alias Investigator a =
 
 {-| Investigator constructor. Construct an Investigator from a generator and
 a shrinker.
+
+**Deprecation notice:** This function will be removed in 3.0.0. Use
+`Investigator` instead.
 -}
 investigator : Generator a -> Shrinker a -> Investigator a
 investigator generator shrinker =
