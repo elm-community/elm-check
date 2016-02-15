@@ -1,5 +1,9 @@
-module Check.Test where
+module Check.Test (evidenceToTest, test, assert, test2, test3, test4, test5, assert2, assert3, assert4, assert5) where
+
 {-| Submodule providing integration with elm-test.
+
+# Convert to tests
+@docs evidenceToTest
 
 # Generate unit tests
 @docs test, assert
@@ -8,11 +12,33 @@ module Check.Test where
 @docs test2, test3, test4, test5, assert2, assert3, assert4, assert5
 
 -}
+import Check
 import Check.Investigator as Investigator exposing (Investigator, tuple, tuple3, tuple4, tuple5)
 import Trampoline exposing (Trampoline(..), trampoline)
 import ElmTest as Test exposing (..)
 import Random exposing (Seed)
 import Lazy.List
+
+nChecks n = if n == 1 then "1 check" else toString n ++ " checks"
+
+{-| Convert elm-check's Evidence into an elm-test Test. You can use elm-test's
+runners to view the results of your property-based tests, alongside the results
+of unit tests.
+-}
+evidenceToTest : Check.Evidence -> Test.Test
+evidenceToTest evidence =
+  case evidence of
+    Check.Multiple name more ->
+      Test.suite name (List.map evidenceToTest more)
+
+    Check.Unit (Ok {name, numberOfChecks}) ->
+      Test.test (name ++ " [" ++ nChecks numberOfChecks ++ "]") Test.pass
+
+    Check.Unit (Err {name, numberOfChecks, expected, actual, counterExample}) ->
+      Test.test name <| Test.fail <|
+        "On check " ++ toString numberOfChecks ++ ", found counterexample: " ++
+        counterExample ++ " Expected " ++ expected ++ " but got " ++ actual
+
 
 {-| Analogous to `claim`. Will generate a given number of unit tests for given
 actual and expected statements. If a unit tests fails, `test` will also generate
