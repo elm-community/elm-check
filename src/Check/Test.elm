@@ -25,16 +25,9 @@ evidenceToTest evidence =
       ElmTest.test (name ++ " [" ++ nChecks numberOfChecks ++ "]") ElmTest.pass
 
     Check.Unit (Err { name, numberOfChecks, expected, actual, counterExample }) ->
-      ElmTest.test name
-        <| ElmTest.fail
-        <| "On check "
-        ++ toString numberOfChecks
-        ++ ", found counterexample: "
-        ++ counterExample
-        ++ " Expected "
-        ++ expected
-        ++ " but got "
-        ++ actual
+      ElmTest.test name <| ElmTest.fail
+        <| "On check " ++ toString numberOfChecks ++ ", found counterexample: "
+        ++ counterExample ++ " Expected " ++ expected ++ " but got " ++ actual
 
 
 nChecks : Int -> String
