@@ -15,7 +15,7 @@ migrating from local to cloud-based.
 @docs Investigator, investigator
 
 # Basic Investigator Generators
-@docs void, bool, order, random, int, rangeInt, float, percentage, char, upperCaseChar, lowerCaseChar, ascii, unicode, string, maybe, result, list, array, tuple, tuple3, tuple4, tuple5, func, func2, func3, func4, func5
+@docs void, bool, order, random, int, rangeInt, float, percentage, char, upperCaseChar, lowerCaseChar, ascii, unicode, string, maybe, result, list, array, tuple, tuple3, tuple4, tuple5, func, func2, func3, func4, func5, keepIf, dropIf
 
 -}
 import Array  exposing (Array)
@@ -259,6 +259,29 @@ tuple5 (invA, invB, invC, invD, invE) =
   investigator
     (Random.zip5 invA.generator invB.generator invC.generator invD.generator invE.generator)
     (Shrink.tuple5 (invA.shrinker, invB.shrinker, invC.shrinker, invD.shrinker, invE.shrinker))
+
+
+{-| Filter out an Investigator. The resulting Investigator will
+only generate random test values or shrunken values that
+satisfy the predicate. Uses the `keepIf` filter from
+elm-random-extra and the `keepIf` filter from elm-shrink.
+-}
+keepIf : (a -> Bool) -> Investigator a -> Investigator a
+keepIf predicate inv =
+  investigator
+    (Random.keepIf predicate inv.generator)
+    (Shrink.keepIf predicate inv.shrinker)
+
+{-| Filter out an Investigator. The resulting Investigator will
+only generate random test values or shrunken values that do not
+satisfy the predicate. Uses the `dropIf` filter from
+elm-random-extra and the `dropIf` filter from elm-shrink.
+-}
+dropIf : (a -> Bool) -> Investigator a -> Investigator a
+dropIf predicate inv =
+  investigator
+    (Random.dropIf predicate inv.generator)
+    (Shrink.dropIf predicate inv.shrinker)
 
 
 {-| Investigator of functions. Takes an investigator for the return type
