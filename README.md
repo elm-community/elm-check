@@ -56,7 +56,7 @@ isn't complicated. The actual and expected values should always be equal. The ty
 same.
 4. `for <Investigator>` An `Investigator` is basically a way to randomly produce values for the inputs to the functions.
 So rather than operating on a single example, like unit testing, it can test that a relationship holds for many values.
-There's an entire module full of `Investigators` so you can test almost anything.
+There's an entire module full of `Investigator`s so you can test almost anything.
 
 Once you've built your claims, verifying them is easy:
 
@@ -75,21 +75,15 @@ You can dive into these results if you like, but the simplest way to know "did m
 main = ElmTest.elementRunner (Check.Test.evidenceToTest evidence)
 ```
 
-TODO: insert image of passing tests
-
-TODO: true and false claims
-
-
-TODO: update everything below here
+Running the page in `elm reactor` will inform you that all tests have passed.
 
 ## Debugging a Failing Claim
 
-Suppose we wanted to test that multiplication and division are inverse operations.
-
-You would make this claim as follows:
+Suppose you start with a number `x`. Mathematically, if you multiply by another number `y`, and then divide by `y`, you
+should be left with `x`. You would make this claim as follows:
 
 ```elm
-claim_multiplication_division_inverse =
+myClaims =
   claim
     "Multiplication and division are inverse operations"
   `that`
@@ -100,82 +94,61 @@ claim_multiplication_division_inverse =
     tuple (float, float)
 ```
 
-Now, if you run `quickCheck` on this claim and displayed it in the browser with `display`, you would get:
+If you put this into the program above, you'd get:
 
-```
-Multiplication and division are inverse operations FAILED after 1 check!
-  - Counter example: (0,0)
-  - Actual: NaN
-  - Expected: 0
-```
+> Multiplication and division are inverse operations: FAILED. On check 1, found counterexample: (0,0) Expected 0 but got NaN
 
-This result shows that `elm-check` has found a counter example, namely `(0,0)`
-which falsifies the claim. This is obviously true because division by 0 is undefined, hence the `NaN` value.
+This result shows that `elm-check` has found a counter example, namely `(0,0)` which falsifies the claim. This is
+obviously true because division by 0 is undefined, hence the `NaN` value.
 
-We can solve this issue by adding this condition to our actual statement and modify it as follows:
+We can easily exclude zero with `dropIf`. Change the last line to:
 
 ```elm
-claim_multiplication_division_inverse =
-  claim
-    "Multiplication and division are inverse operations"
-  `that`
-    (\(x, y) -> if y == 0 then x else x * y / y)
-  `is`
-    (\(x, y) -> x)
-  `for`
-    tuple (float, float)
+dropIf (\(x, y) -> y == 0) (tuple (float, float))
 ```
 
-So, we added the condition where if y is 0, we simply return x. Now, let's see
-what `elm-check` gives us now if we run `quickCheck`.
+Now we get a different error.
 
-```
-Multiplication and division are inverse operations FAILED after 1 check!
-  - Counter example: (0.0001073802195855836,0.00013967437556471545)
-  - Actual: 0.00010738021958558358
-  - Expected: 0.0001073802195855836
-```
+> Multiplication and division are inverse operations: FAILED. On check 1, found counterexample:
+> (0.0001073802195855836,0.00013967437556471545) Expected 0.0001073802195855836 but got 0.00010738021958558358
 
-Uh-oh, a new counter example. So, we can see that the actual and the expected values are incredibly close. From their closeness we can easily infer that something went wrong in the rounding. This is exactly what has happened as this is a floating-point error.
+Floating point arithmetic strikes again! Notice that the expect and the actual values only differ by a tiny amount.
 
-An interesting thing to note is that the counter example found was incredibly close to the original one of `(0,0)`. How come? The `float` investigator has the ability to generate any random float. So, what has happened here?
-
-Well, to do this let us look back at the original claim:
+Instead of claiming equality, we want to claim that the two values are near to each other. In particular, we want to say
+that the difference of these values is very close to zero. Rather than supplying expected and actual, we will supply a
+function that we expect to always be true.
 
 ```elm
-claim_multiplication_division_inverse =
+myClaims : Claim
+myClaims =
   claim
-    "Multiplication and division are inverse operations"
-  `that`
-    (\(x, y) -> x * y / y)
-  `is`
-    (\(x, y) -> x)
+    "Multiplication and division are near inverse operations"
+  `true`
+    (\(x, y) -> abs ((x * y / y) - x) < 1e-10)
   `for`
-    tuple (float, float)
+    dropIf (\(x, y) -> y == 0) (tuple (float, float))
 ```
 
-And this time, instead of displaying the results with `display`, let us use the alternative `displayVerbose` function which gives more detail about the test results.
+The test now passes. This gives us confidence that multiplication and division are very nearly inverses, for any pair of
+floats where the second one isn't zero.
 
-Now, we get this output:
+TODO update everything below this
 
-```
-Multiplication and division are inverse operations FAILED after 1 check!
-  - Counter example: (0,0)
-  - Actual: NaN
-  - Expected: 0
-  - Seed: State 879767458 1052200661
-  - Number of shrinking operations performed: 4
-  - Before shrinking:
-    - Counter example: (-14.074540141521613,-18.307399754018384)
-    - Actual: -14.074540141521611
-    - Expected: -14.074540141521613
-```
+## Shrinking
 
-From here we can see that there are a "seed", a "number of shrinking operations performed" and a "before shrinking" fields. The "seed" is there in order to reproduce test results. The "shrinking" stuff relates to a feature that `elm-check` provides called "shrinking".
+From here we can see that there are a "seed", a "number of shrinking operations performed" and a "before shrinking"
+fields. The "seed" is there in order to reproduce test results. The "shrinking" stuff relates to a feature that
+`elm-check` provides called "shrinking".
 
-Shrinking is the idea of shrinking a test case to a minimal representation. In this case, the investigator `tuple (float, float)` has found the original counter example `(-14.074540141521613,-18.307399754018384)`. It has then taken this counter example and has searched for another counter example that is more minimal that still disproves the claim. It has then repeated this process until it finds no more minimal counter example that still disproves the claim, in this case, simply `(0,0)`. Intuitively, `(0,0)` is as minimal an input as it gets. Having such minimal inputs is key to diagnosing problem.
+Shrinking is the idea of shrinking a test case to a minimal representation. In this case, the investigator `tuple
+(float, float)` has found the original counter example `(-14.074540141521613,-18.307399754018384)`. It has then taken
+this counter example and has searched for another counter example that is more minimal that still disproves the claim.
+It has then repeated this process until it finds no more minimal counter example that still disproves the claim, in this
+case, simply `(0,0)`. Intuitively, `(0,0)` is as minimal an input as it gets. Having such minimal inputs is key to
+diagnosing problem.
 
-As we have seen, this simple claim has enabled us to diagnose two gotchas about division. Get used to this as it is very common for individual claims to encounter multiple problems with a system.
+As we have seen, this simple claim has enabled us to diagnose two gotchas about division. Get used to this as it is very
+common for individual claims to encounter multiple problems with a system.
 
 
 # Migrating from previous version (prior to Elm 0.15)
