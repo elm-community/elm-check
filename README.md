@@ -1,31 +1,14 @@
 # Property Based Testing in Elm with elm-check
 
-Property-based testing is a style of testing that focuses on making claims about your system and attempting to disprove these claims. The goal of `elm-check` is to automate this process.
+Traditional unit-testing consists in asserting that certain inputs yield certain outputs. Property-based testing makes
+claims relating input and output. These claims can then be automatically tested over as many randomly-generated inputs
+as desired. If a failing input is found, it can be "shrunk" to compute a minimal failing case which is more
+representative of the bug. The goal of `elm-check` is to automate this process.
 
-The most common method of testing is unit-testing. Unit-testing consists in manually stating assertions that certain inputs yield certain outputs. While familiar, this approach has several drawbacks.
+## Quick-Start Guide
 
-1. Writing assertions is a very boring and tedious process.
-2. More often than not, the inputs chosen to test are completely arbitrary and may give little insight to the correctness of your system.
-3. Even if a unit test did fail, the failed unit may or may not be helpful to diagnose your problem.
-
-The way `elm-check` solves these problems is by
-
-1. Automate the generation of unit tests
-2. Use random number generation to explore an arbitrarily large sample of your input space
-3. Compute a minimal failing case which is then more representative of the issue encountered in your system by the test.
-
-
-# How it works
-
-`elm-check` is centered around the idea of `claims` and `investigators`. You make a claim of truth about your system and have an investigator check the claim.
-
-For example, suppose you wanted to test a function to reverse a list of elements.
-
-```elm
-reverse : List a -> List a
-```
-
-For this to be a correct `reverse` function, there are a number of properties that must hold true, such as:
+Suppose you wanted to test `List.reverse`. A correct implementation will obey a number of properties, *regardless of the
+list being reversed*, including:
 
 1. Reversing a list twice yields the original list
 2. Reversing does not modify the length of a list
@@ -33,67 +16,73 @@ For this to be a correct `reverse` function, there are a number of properties th
 You can make these claims in `elm-check` as follows:
 
 ```elm
-claim_reverse_twice_yields_original =
-  claim
-    "Reversing a list twice yields the original list"
-  `that`
-    (\list -> reverse (reverse list))
-  `is`
-    (identity)
-  `for`
-    list int
+myClaims : Claim
+myClaims =
+  suite "List Reverse"
+    [ claim
+        "Reversing a list twice yields the original list"
+      `that`
+        (\list -> reverse (reverse list))
+      `is`
+        (identity)
+      `for`
+        list int
 
-
-claim_reverse_does_not_modify_length =
-  claim
-    "Reversing a list does not modify its length"
-  `that`
-    (\list -> length (reverse list))
-  `is`
-    (\list -> length list)
-  `for`
-    list int
-```
-
-As, you can see, `elm-check` defines a [DSL](https://en.wikipedia.org/wiki/Domain-specific_language) for writing claims. The code reads very simply.
-
-The first claim claims that reversing a list twice yields the original list. The string passed to claim is used for displaying, so make it as descriptive as necessary. Then `that` takes your actual statement about `reverse`, i.e. reversing it twice. `is` takes your expected statement about `reverse`, i.e. that it is the identity function. This is analogous to expected vs actual in unit testing. You expect that reversing a list twice is equivalent to not doing anything to the list. `for` then takes an investigator for the claim. In this case, `list int` will investigate the space of possible lists of integers and will try to disprove the claim.
-
-
-
-You can then test each claim individually using the `quickCheck` function:
-
-```elm
-result1 = quickCheck claim_reverse_twice_yields_original
-result2 = quickCheck claim_reverse_does_not_modify_length
-```
-
-Or you can group these claims in a suite and check the suite:
-
-```elm
-suite_reverse =
-  suite "List Reverse Suite"
-    [ claim_reverse_twice_yields_original
-    , claim_reverse_does_not_modify_length
+    , claim
+      "Reversing a list does not modify its length"
+    `that`
+      (\list -> length (reverse list))
+    `is`
+      (\list -> length list)
+    `for`
+      list int
     ]
-
-result = quickCheck suite_reverse
 ```
 
-`quickCheck` will take either a single claim or a suite of claims and will run 100 checks on each claim to attempt to disprove each claim. `quickCheck` will then return a descriptive result of the checks performed.
+As, you can see, `elm-check` defines a Domain-Specific Language (DSL) for writing claims. It may look odd at first, but
+the code is actually very straightforward to work with.
 
-You can then visualize these results using the `display` function:
+> ***Straightforward?!*** It might help to review some language features being used. First, `suite` takes a string and a
+> list, which forms most of the code. The list actually has only two items, the result of calling `claim` twice. (See
+> the comma right before the second `claim`?)  Backticks indicate that a function is being called infix. `(\x -> thing x)`
+> is an anonymous function.
+
+Let's examine each component of a claim.
+
+1. `claim <String>` This is the name of the test and is used when output is displayed, so make it descriptive.
+2. `that <function>` This is the "actual" value, the result of the code or feature under test.
+3. `is <function>` This is the "expected" value. Think of it like a control in a science experiment. It's the value that
+isn't complicated. The actual and expected values should always be equal. The types of these two functions must be the
+same.
+4. `for <Investigator>` An `Investigator` is basically a way to randomly produce values for the inputs to the functions.
+So rather than operating on a single example, like unit testing, it can test that a relationship holds for many values.
+There's an entire module full of `Investigators` so you can test almost anything.
+
+Once you've built your claims, verifying them is easy:
 
 ```elm
-main = display result
+evidence : Evidence
+evidence = quickCheck myClaims
 ```
 
-And, voila, in just a few lines of code, you have made two different claims about the `reverse` function and performed 200 checks and displayed the results.
+`quickCheck` will take either a single claim or a suite of claims and will run 100 checks on each claim to attempt to
+disprove each claim. `quickCheck` will then return a descriptive result of the checks performed, in the `Evidence` type.
+
+You can dive into these results if you like, but the simplest way to know "did my tests pass" is to use
+[elm-test](http://package.elm-lang.org/packages/deadfoxygrandpa/elm-test/latest/ElmTest).
+
+```elm
+main = ElmTest.elementRunner (Check.Test.evidenceToTest evidence)
+```
+
+TODO: insert image of passing tests
+
+TODO: true and false claims
 
 
-### Simple example
+TODO: update everything below here
 
-Let us look at a very simple example to get a feel for how to use `elm-check`.
+## Debugging a Failing Claim
 
 Suppose we wanted to test that multiplication and division are inverse operations.
 
@@ -358,34 +347,3 @@ claim_multiplication_division_inverse =
 
 An important thing to note about the DSL, these functions only work with `claim`. They don't even work with the multi-arity versions of `claim`. So, if you want to do have claims with multiple arguments, you have to use tuples directly. Functions like `claim2` or `claim3` use tuples behind the scenes, but the type system in Elm is such that I couldn't figure out how to introduce the DSL while still providing he ability to work with claims of arbitrary number of arguments. The examples above were picked purposefully to illustrate how this would be done.
 
-### Missing from previous versions
-
-Continuous checking is gone from this version. If you are using it, don't worry, it is getting replaced with a newer, shinier Task-based version. The goal here is to provide a means to capture the progression of a run of `elm-check` by running checks in tasks and sending the result to mailboxes. This will make continuous checking way more responsive than the previous Signal-based version which tended to perform terribly if the functions you were testing happened to be computationally intensive. So, watch this space and expect the browser runner to be dramatically improved as this feature is supported.
-
-
-# Elm-test integration
-
-Another big feature of the new version of `elm-check` is an integration with `elm-test`. Now, `elm-check` provides a way to generate `elm-test` unit tests and assertions directly and can be used completely transparently alongside `elm-test`. Due to slight differences on the priorities of `elm-check` and `elm-test`, you must use a separate submodule to generate `elm-test` unit tests. The API provided by the `Check.Test` submodule is very analogous to the one provided by the regular `Check` module and moving between the two is very easy.
-
-The main difference here is that you cannot use the types `Claim` and `Evidence` in `Check.Test`. Instead, you directly generate `Test` results as in `elm-test`.
-
-`Check.Test` is centered around a single function called `test`.
-
-```elm
-test : String -> (a -> b) -> (a -> b) -> Investigator a -> Int -> Seed -> Test
-```
-
-`test` is basically what would happen if you slammed `check` and `claim` together. Given a name for the test, an actual statement, an expected statement, an investigator, `n` number of checks, and a random seed, `test` will generate `n` many unit tests using random generation. Furthermore, `test` will add in an extra minimal failing unit test in the case on of the assertions fail. Basically, `test` generates a suite of unit tests focused around a single property of your system. This means that you get both the ability to generate arbitrarily many unit tests, but also the ability to shrink these unit tests.
-
-Think of `Check.Test` as a module dedicated to authoring `elm-test` unit tests. Since this process is separate from the rest of `elm-check`, these unit tests run in the `elm-test` runners without a problem and can be merged in with regular `elm-test` assertions into suites to your liking.
-
-
-Note that the DSL doesn't work here unfortunately. The DSL is specifically made to work for claims whereas the idea here is mainly to provide compatibility with `elm-test`. Instead of stating claims about a system, the focus here is placed in generating tests (as you might be able to tell from the differently-named functions).
-
-Finally `Check.Test` also provides an `assert` function which is analogous to `claimTrue` in `Check`:
-
-```elm
-assert : String -> (a -> Bool) -> Investigator a -> Int -> Seed -> Test
-```
-
-as well as multi-arity versions of both `test` and `assert`.
