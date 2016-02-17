@@ -57,37 +57,13 @@ The results of checking a claim are given back in the types defined here. You
 can examine them yourself, or see `Check.Test` to convert them into tests to use
 with `elm-check`'s runners.
 @docs Claim, Evidence, UnitEvidence, SuccessOptions, FailureOptions
-
-# Deprecated claim functions
-These functions will be removed in 3.0.0. Use the DSL.
-@docs claimTrue, claimFalse, claim2, claim2True, claim2False, claim3, claim3True, claim3False, claim4, claim4True, claim4False, claim5, claim5True, claim5False
-
-
 -}
-
---------------------------
--- CORE LIBRARY IMPORTS --
---------------------------
 
 import Lazy.List
 import Random     exposing (Seed, Generator)
 import Trampoline exposing (Trampoline(..), trampoline)
 
--------------------------
--- THIRD PARTY IMPORTS --
--------------------------
-
-import Random.Extra as Random
-
--------------------
--- LOCAL IMPORTS --
--------------------
-
-import Check.Investigator  exposing (Investigator, tuple, tuple3, tuple4, tuple5)
-
------------
--- TYPES --
------------
+import Check.Investigator  exposing (Investigator)
 
 {-| A Claim is an object that makes a claim of truth about a system.
 A claim is either a function which yields evidence regarding the claim
@@ -153,35 +129,6 @@ type alias FailureOptions =
   , numberOfShrinks : Int
   }
 
-{-}
-encode_failureOptions : FailureOptions -> Value
-encode_failureOptions options =
-  Encode.object
-    [ ("name", Encode.string options.name)
-    , ("counterExample", Encode.string options.counterExample)
-    , ("actual", Encode.string options.actual)
-    , ("expected", Encode.string options.expected)
-    , ("original",
-          Encode.object
-            [ ("counterExample", Encode.string options.original.counterExample)
-            , ("actual", Encode.string options.original.actual)
-            , ("expected", Encode.string options.original.expected)
-            ]
-
-      )
-    , ("seed",
-        let (s0, s1) = case options.seed.state of
-              State s0 s1 -> (s0, s1)
-        in
-            Encode.list [Encode.int s0, Encode.int s1]
-      )
-    , ("numberOfChecks", Encode.int options.numberOfChecks)
-    , ("numberOfShrinks", Encode.int options.numberOfShrinks)
-    ]
--}
-------------------
--- MAKE A CLAIM --
-------------------
 
 {-| Make a claim about a system.
 
@@ -400,52 +347,6 @@ claim name actualStatement expectedStatement investigator =
                 }
 
 
-{-| Make a claim of truth about a system.
-
-Similar to `claim`, `claimTrue` only considers claims which always yield `True`
-to be true. If `claimTrue` manages to find an input which causes the given
-predicate to yield `False`, then it will consider that as the counter example.
-
-    claimTrue nameOfClaim predicate investigator
-
-
-Example:
-
-    claim_length_list_nonnegative =
-      claimTrue "The length of a list is strictly non-negative"
-        (\list -> List.length list >= 0)
-        (list string)
--}
-claimTrue : String -> (a -> Bool) -> Investigator a -> Claim
-claimTrue name predicate =
-  claim name predicate (always True)
-
-
-{-| Make a claim of falsiness about a system.
-
-Analogous to `claimTrue`, `claimFalse` only considers claims which always yield
-`False` to be true. If `claimFalse` manages to find an input which causes the
-given predicate to yield `True`, then it will consider that as the counter
-example.
-
-    claimFalse nameOfClaim predicate investigator
-
-
-Example:
-
-    claim_length_list_never_negative =
-      claimFalse "The length of a list is never negative"
-      (\list -> List.length list < 0)
-      (list float)
--}
-claimFalse : String -> (a -> Bool) -> Investigator a -> Claim
-claimFalse name predicate =
-  claim name predicate (always False)
-
-
--------------------
--- CHECK A CLAIM --
--------------------
 
 {-| Check a claim.
 
@@ -477,10 +378,6 @@ quickCheck claim =
   check claim 100 (Random.initialSeed 1)
 
 
--------------------------------
--- GROUP CLAIMS INTO A SUITE --
--------------------------------
-
 {-| Group a list of claims into a suite. This is very useful in order to
 group similar claims together.
 
@@ -490,76 +387,6 @@ suite : String -> List Claim -> Claim
 suite name claims =
   Suite name claims
 
-
-------------------------
--- MULTI-ARITY CLAIMS --
-------------------------
-
-{-|-}
-claim2 : String -> (a -> b -> c) -> (a -> b -> c) -> Investigator a -> Investigator b -> Claim
-claim2 name actualStatement expectedStatement specA specB =
-  claim name (\(a, b) -> actualStatement a b) (\(a, b) -> expectedStatement a b) (tuple (specA, specB))
-
-{-|-}
-claim2True : String -> (a -> b -> Bool) -> Investigator a -> Investigator b -> Claim
-claim2True name predicate =
-  claim2 name predicate (\_ _ -> True)
-
-{-|-}
-claim2False : String -> (a -> b -> Bool) -> Investigator a -> Investigator b -> Claim
-claim2False name predicate =
-  claim2 name predicate (\_ _ -> False)
-
-{-|-}
-claim3 : String -> (a -> b -> c -> d) -> (a -> b -> c -> d) -> Investigator a -> Investigator b -> Investigator c -> Claim
-claim3 name actualStatement expectedStatement specA specB specC =
-  claim name (\(a, b, c) -> actualStatement a b c) (\(a, b, c) -> expectedStatement a b c) (tuple3 (specA, specB, specC))
-
-{-|-}
-claim3True : String -> (a -> b -> c -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Claim
-claim3True name predicate =
-  claim3 name predicate (\_ _ _ -> True)
-
-{-|-}
-claim3False : String -> (a -> b -> c -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Claim
-claim3False name predicate =
-  claim3 name predicate (\_ _ _ -> False)
-
-{-|-}
-claim4 : String -> (a -> b -> c -> d -> e) -> (a -> b -> c -> d -> e) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Claim
-claim4 name actualStatement expectedStatement specA specB specC specD =
-  claim name (\(a, b, c, d) -> actualStatement a b c d) (\(a, b, c, d) -> expectedStatement a b c d) (tuple4 (specA, specB, specC, specD))
-
-{-|-}
-claim4True : String -> (a -> b -> c -> d -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Claim
-claim4True name predicate =
-  claim4 name predicate (\_ _ _ _ -> True)
-
-{-|-}
-claim4False : String -> (a -> b -> c -> d -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Claim
-claim4False name predicate =
-  claim4 name predicate (\_ _ _ _ -> False)
-
-{-|-}
-claim5 : String -> (a -> b -> c -> d -> e -> f) -> (a -> b -> c -> d -> e -> f) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Investigator e -> Claim
-claim5 name actualStatement expectedStatement specA specB specC specD specE =
-  claim name (\(a, b, c, d, e) -> actualStatement a b c d e) (\(a, b, c, d, e) -> expectedStatement a b c d e) (tuple5 (specA, specB, specC, specD, specE))
-
-{-|-}
-claim5True : String -> (a -> b -> c -> d -> e -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Investigator e -> Claim
-claim5True name predicate =
-  claim5 name predicate (\_ _ _ _ _ -> True)
-
-{-|-}
-claim5False : String -> (a -> b -> c -> d -> e -> Bool) -> Investigator a -> Investigator b -> Investigator c -> Investigator d -> Investigator e -> Claim
-claim5False name predicate =
-  claim5 name predicate (\_ _ _ _ _ -> False)
-
-
-
----------
--- DSL --
----------
 
 {-|-}
 that : ((a -> b) -> (a -> b) -> Investigator a -> Claim) -> (a -> b) -> ((a -> b) -> Investigator a -> Claim)

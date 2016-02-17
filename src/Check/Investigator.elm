@@ -8,14 +8,11 @@ a very slow process and is best paired with some sort of continuous integration
 service. Consider making your own, more general investigator generators when
 migrating from local to cloud-based.
 
-# Shrink
-@docs shrink
-
 # Investigator Definition
-@docs Investigator, investigator
+@docs Investigator
 
 # Basic Investigator Generators
-@docs void, bool, order, random, int, rangeInt, float, percentage, char, upperCaseChar, lowerCaseChar, ascii, unicode, string, maybe, result, list, array, tuple, tuple3, tuple4, tuple5, func, func2, func3, func4, func5, keepIf, dropIf
+@docs void, bool, order, int, rangeInt, float, percentage, char, upperCaseChar, lowerCaseChar, ascii, unicode, string, maybe, result, list, array, tuple, tuple3, tuple4, tuple5, func, func2, func3, func4, func5, keepIf, dropIf
 
 -}
 import Array  exposing (Array)
@@ -40,39 +37,26 @@ type alias Investigator a =
   , shrinker  : Shrinker a
   }
 
-{-| Investigator constructor. Construct an Investigator from a generator and
-a shrinker.
-
-**Deprecation notice:** This function will be removed in 3.0.0. Use
-`Investigator` instead.
--}
-investigator : Generator a -> Shrinker a -> Investigator a
-investigator generator shrinker =
-  { generator = generator
-  , shrinker  = shrinker
-  }
-
-
 {-| Investigator void. Uses a constant generator and the `void` shrinker from
 elm-shrink.
 -}
 void : Investigator ()
 void =
-  investigator (Random.constant ()) Shrink.void
+  Investigator (Random.constant ()) Shrink.void
 
 {-| Investigator bool. Uses the bool generator from elm-random-extra and the
 `bool` shrinker from elm-shrink.
 -}
 bool : Investigator Bool
 bool =
-  investigator (Random.Bool.bool) Shrink.bool
+  Investigator (Random.Bool.bool) Shrink.bool
 
 {-| Investigator order. Uses the order generator from elm-random-extra and the
 `order` shrinker from elm-shrink.
 -}
 order : Investigator Order
 order =
-  investigator (Random.Order.order) Shrink.order
+  Investigator (Random.Order.order) Shrink.order
 
 
 {-| Investigator int. Generates random ints between -50 and 50 and the `int`
@@ -86,7 +70,7 @@ int =
           , (1, Random.int Random.minInt Random.maxInt)
           ] (Random.int -50 50)
   in
-      investigator generator Shrink.int
+      Investigator generator Shrink.int
 
 
 {-| Investigator int constructor. Generates random ints between a given `min`
@@ -94,7 +78,7 @@ and a given `max` value.
 -}
 rangeInt : Int -> Int -> Investigator Int
 rangeInt min max =
-  investigator (Random.int min max) Shrink.int
+  Investigator (Random.int min max) Shrink.int
 
 
 {-| Investigator float. Generates random floats between -50 and 50 and the `float`
@@ -108,7 +92,7 @@ float =
           , (1, Random.float (toFloat Random.minInt) (toFloat Random.maxInt))
           ] (Random.float -50 50)
   in
-      investigator (Random.float -50 50) Shrink.float
+      Investigator (Random.float -50 50) Shrink.float
 
 
 {-| Investigator percentage. Generates random floats between 0.0 and 1.0 and the `float`
@@ -124,7 +108,7 @@ percentage =
           , (1, Random.constant 1)
           ] (Random.float 0 1)
   in
-      investigator generator Shrink.float
+      Investigator generator Shrink.float
 
 
 {-| Investigator char. Generates random ascii chars using the `ascii` generator
@@ -133,7 +117,7 @@ testing or if your domain deals exclusively with ascii.
 -}
 ascii : Investigator Char
 ascii =
-  investigator (Random.Char.ascii) Shrink.char
+  Investigator (Random.Char.ascii) Shrink.char
 
 
 {-| Investigator char. Generates random ascii chars disregarding the control
@@ -144,21 +128,21 @@ characters.
 -}
 char : Investigator Char
 char =
-  investigator (Random.Char.char 32 127) Shrink.character
+  Investigator (Random.Char.char 32 127) Shrink.character
 
 {-| Investigator char. Generates random ascii chars using the `upperCaseLatin`
 generator from elm-random-extra and the `character` shrinker from elm-shrink.
 -}
 upperCaseChar : Investigator Char
 upperCaseChar =
-  investigator Random.Char.upperCaseLatin Shrink.character
+  Investigator Random.Char.upperCaseLatin Shrink.character
 
 {-| Investigator char. Generates random ascii chars using the `lowerCaseLatin`
 generator from elm-random-extra and the `character` shrinker from elm-shrink.
 -}
 lowerCaseChar : Investigator Char
 lowerCaseChar =
-  investigator Random.Char.lowerCaseLatin Shrink.character
+  Investigator Random.Char.lowerCaseLatin Shrink.character
 
 {-| Investigator char. Generates a random UTF-8 character using the
 `unicode` generator from elm-random-extra and the `char` shrinker from
@@ -166,7 +150,7 @@ elm-shrink.
 -}
 unicode : Investigator Char
 unicode =
-  investigator (Random.Char.unicode) Shrink.char
+  Investigator (Random.Char.unicode) Shrink.char
 
 {-| Investigator string. Generates random ascii strings of size between 0 and 10
 using the `rangeLengthString` generator from elm-random-extra and the `string`
@@ -174,7 +158,7 @@ shrinker from elm-shrink. Ideal for local testing.
 -}
 string : Investigator String
 string =
-  investigator
+  Investigator
     (Random.String.rangeLengthString 0 10 Random.Char.ascii)
     (Shrink.string)
 
@@ -185,7 +169,7 @@ elm-random-extra and the `maybe` shrinker constructor from elm-shrink.
 -}
 maybe : Investigator a -> Investigator (Maybe a)
 maybe inv =
-  investigator
+  Investigator
     (Random.Maybe.maybe inv.generator)
     (Shrink.maybe inv.shrinker)
 
@@ -195,7 +179,7 @@ elm-random-extra and the `result` shrinker constrctor from elm-shrink.
 -}
 result : Investigator error -> Investigator value -> Investigator (Result error value)
 result errSpec valSpec =
-  investigator
+  Investigator
     (Random.Result.result errSpec.generator valSpec.generator)
     (Shrink.result errSpec.shrinker valSpec.shrinker)
 
@@ -206,7 +190,7 @@ from elm-shrink. Ideal for local testing.
 -}
 list : Investigator a -> Investigator (List a)
 list inv =
-  investigator
+  Investigator
     (Random.List.rangeLengthList 0 10 inv.generator)
     (Shrink.list inv.shrinker)
 
@@ -218,7 +202,7 @@ from elm-shrink. Ideal for local testing.
 -}
 array : Investigator a -> Investigator (Array a)
 array inv =
-  investigator
+  Investigator
     (Random.Array.rangeLengthArray 0 10 inv.generator)
     (Shrink.array inv.shrinker)
 
@@ -228,7 +212,7 @@ of investigator generators. Uses the `tuple` shrinker constructor from elm-shrin
 -}
 tuple : (Investigator a, Investigator b) -> Investigator (a, b)
 tuple (invA, invB) =
-  investigator
+  Investigator
     (Random.zip invA.generator invB.generator)
     (Shrink.tuple (invA.shrinker, invB.shrinker))
 
@@ -240,7 +224,7 @@ of investigator generators. Uses the `tuple3` shrinker constrctor from elm-shrin
 -}
 tuple3 : (Investigator a, Investigator b, Investigator c) -> Investigator (a, b, c)
 tuple3 (invA, invB, invC) =
-  investigator
+  Investigator
     (Random.zip3 invA.generator invB.generator invC.generator)
     (Shrink.tuple3 (invA.shrinker, invB.shrinker, invC.shrinker))
 
@@ -249,7 +233,7 @@ of investigator generators. Uses the `tuple4` shrinker constrctor from elm-shrin
 -}
 tuple4 : (Investigator a, Investigator b, Investigator c, Investigator d) -> Investigator (a, b, c, d)
 tuple4 (invA, invB, invC, invD) =
-  investigator
+  Investigator
     (Random.zip4 invA.generator invB.generator invC.generator invD.generator)
     (Shrink.tuple4 (invA.shrinker, invB.shrinker, invC.shrinker, invD.shrinker))
 
@@ -259,7 +243,7 @@ of investigator generators. Uses the `tuple5` shrinker constrctor from elm-shrin
 -}
 tuple5 : (Investigator a, Investigator b, Investigator c, Investigator d, Investigator e) -> Investigator (a, b, c, d, e)
 tuple5 (invA, invB, invC, invD, invE) =
-  investigator
+  Investigator
     (Random.zip5 invA.generator invB.generator invC.generator invD.generator invE.generator)
     (Shrink.tuple5 (invA.shrinker, invB.shrinker, invC.shrinker, invD.shrinker, invE.shrinker))
 
@@ -271,7 +255,7 @@ elm-random-extra and the `keepIf` filter from elm-shrink.
 -}
 keepIf : (a -> Bool) -> Investigator a -> Investigator a
 keepIf predicate inv =
-  investigator
+  Investigator
     (Random.keepIf predicate inv.generator)
     (Shrink.keepIf predicate inv.shrinker)
 
@@ -282,7 +266,7 @@ elm-random-extra and the `dropIf` filter from elm-shrink.
 -}
 dropIf : (a -> Bool) -> Investigator a -> Investigator a
 dropIf predicate inv =
-  investigator
+  Investigator
     (Random.dropIf predicate inv.generator)
     (Shrink.dropIf predicate inv.shrinker)
 
@@ -293,7 +277,7 @@ elm-random-extra and does not perform any shrinking.
 -}
 func : Investigator b -> Investigator (a -> b)
 func invB =
-  investigator
+  Investigator
     (Random.Function.func invB.generator)
     (Shrink.noShrink)
 
@@ -301,44 +285,30 @@ func invB =
 {-|-}
 func2 : Investigator c -> Investigator (a -> b -> c)
 func2 invC =
-  investigator
+  Investigator
     (Random.Function.func2 invC.generator)
     (Shrink.noShrink)
 
 {-|-}
 func3 : Investigator d -> Investigator (a -> b -> c -> d)
 func3 invD =
-  investigator
+  Investigator
     (Random.Function.func3 invD.generator)
     (Shrink.noShrink)
 
 {-|-}
 func4 : Investigator e -> Investigator (a -> b -> c -> d -> e)
 func4 invE =
-  investigator
+  Investigator
     (Random.Function.func4 invE.generator)
     (Shrink.noShrink)
 
 {-|-}
 func5 : Investigator f -> Investigator (a -> b -> c -> d -> e -> f)
 func5 invF =
-  investigator
+  Investigator
     (Random.Function.func5 invF.generator)
     (Shrink.noShrink)
-
-{-| Shrink a value from an Investigator generator.
-
-    int : Investigator Int
-
-    shrink int 10 == [0,5,7,8,9]
--}
-shrink : Investigator a -> Shrinker a
-shrink = .shrinker
-
-{-| Extract a Random Generator from and an Investigator generator.
--}
-random : Investigator a -> Generator a
-random = .generator
 
 {-} Simple example
 
