@@ -1,26 +1,11 @@
 module Check where
 {-| Property Based Testing module in Elm.
 
-# Make a claim
-@docs claim, claimTrue, claimFalse
+# A DSL for writing claims
 
-# Check a claim
-@docs quickCheck, check
-
-# Group claims into a suite
-@docs suite
-
-# Types
-@docs Claim, Evidence, UnitEvidence, SuccessOptions, FailureOptions
-
-# Multi-arity claims
-@docs claim2, claim2True, claim2False, claim3, claim3True, claim3False, claim4, claim4True, claim4False, claim5, claim5True, claim5False
-
-# DSL
-
-`elm-check` provides a shorthand DSL for authoring claims. The goal of this
-DSL is to help improve readability and encode intent in the phrasing of your
-test code.
+`elm-check` provides a shorthand domain-specific language (DSL) for authoring
+claims. The goal of this DSL is to help improve readability and encode intent in
+the phrasing of your test code.
 
 With the DSL, claims read as either:
 
@@ -59,7 +44,24 @@ are strictly necessary, they are there to ensure that the test is authored in
 a uniform way. As a result, the following functions have horrendous type
 signatures and you are better off ignoring them.*
 
-@docs that, is, for, true, false
+@docs claim, that, is, for, true, false
+
+# Check a claim
+@docs quickCheck, check
+
+# Group claims into a suite
+@docs suite
+
+# Types
+The results of checking a claim are given back in the types defined here. You
+can examine them yourself, or see `Check.Test` to convert them into tests to use
+with `elm-check`'s runners.
+@docs Claim, Evidence, UnitEvidence, SuccessOptions, FailureOptions
+
+# Deprecated claim functions
+These functions will be removed in 3.0.0. Use the DSL.
+@docs claimTrue, claimFalse, claim2, claim2True, claim2False, claim3, claim3True, claim3False, claim4, claim4True, claim4False, claim5, claim5True, claim5False
+
 
 -}
 
