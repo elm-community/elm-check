@@ -13,14 +13,17 @@ migrating from local to cloud-based.
 @docs Investigator
 
 # Basic Investigator Generators
-@docs void, bool, order, int, rangeInt, float, percentage, char, upperCaseChar, lowerCaseChar, ascii, unicode, string, maybe, result, list, array, tuple, tuple3, tuple4, tuple5, func, func2, func3, func4, func5, keepIf, dropIf
+@docs void, bool, order, int, rangeInt, float, percentage, char, upperCaseChar, lowerCaseChar, ascii, unicode, string, maybe, result, list, array, tuple, tuple3, tuple4, tuple5, func, func2, func3, func4, func5
+
+# Working with Investigators
+@docs convert, map, keepIf, dropIf
 
 -}
 
 import Array exposing (Array)
 import Shrink exposing (Shrinker)
 import Random exposing (Generator)
-import Random.Extra as Random
+import Random.Extra
 import Random.Bool
 import Random.Function
 import Random.Order
@@ -46,7 +49,7 @@ elm-shrink.
 -}
 void : Investigator ()
 void =
-  Investigator (Random.constant ()) Shrink.void
+  Investigator (Random.Extra.constant ()) Shrink.void
 
 
 {-| Investigator bool. Uses the bool generator from elm-random-extra and the
@@ -72,7 +75,7 @@ int : Investigator Int
 int =
   let
     generator =
-      Random.frequency
+      Random.Extra.frequency
         [ ( 3, Random.int -50 50 )
         , ( 1, Random.int Random.minInt Random.maxInt )
         ]
@@ -96,7 +99,7 @@ float : Investigator Float
 float =
   let
     generator =
-      Random.frequency
+      Random.Extra.frequency
         [ ( 3, Random.float -50 50 )
         , ( 1, Random.float (toFloat Random.minInt) (toFloat Random.maxInt) )
         ]
@@ -113,10 +116,10 @@ percentage : Investigator Float
 percentage =
   let
     generator =
-      Random.frequency
+      Random.Extra.frequency
         [ ( 3, Random.float 0 1 )
-        , ( 1, Random.constant 0 )
-        , ( 1, Random.constant 1 )
+        , ( 1, Random.Extra.constant 0 )
+        , ( 1, Random.Extra.constant 1 )
         ]
         (Random.float 0 1)
   in
@@ -231,7 +234,7 @@ of investigator generators. Uses the `tuple` shrinker constructor from elm-shrin
 tuple : ( Investigator a, Investigator b ) -> Investigator ( a, b )
 tuple ( invA, invB ) =
   Investigator
-    (Random.zip invA.generator invB.generator)
+    (Random.Extra.zip invA.generator invB.generator)
     (Shrink.tuple ( invA.shrinker, invB.shrinker ))
 
 
@@ -241,7 +244,7 @@ of investigator generators. Uses the `tuple3` shrinker constrctor from elm-shrin
 tuple3 : ( Investigator a, Investigator b, Investigator c ) -> Investigator ( a, b, c )
 tuple3 ( invA, invB, invC ) =
   Investigator
-    (Random.zip3 invA.generator invB.generator invC.generator)
+    (Random.Extra.zip3 invA.generator invB.generator invC.generator)
     (Shrink.tuple3 ( invA.shrinker, invB.shrinker, invC.shrinker ))
 
 
@@ -251,7 +254,7 @@ of investigator generators. Uses the `tuple4` shrinker constrctor from elm-shrin
 tuple4 : ( Investigator a, Investigator b, Investigator c, Investigator d ) -> Investigator ( a, b, c, d )
 tuple4 ( invA, invB, invC, invD ) =
   Investigator
-    (Random.zip4 invA.generator invB.generator invC.generator invD.generator)
+    (Random.Extra.zip4 invA.generator invB.generator invC.generator invD.generator)
     (Shrink.tuple4 ( invA.shrinker, invB.shrinker, invC.shrinker, invD.shrinker ))
 
 
@@ -261,32 +264,62 @@ of investigator generators. Uses the `tuple5` shrinker constrctor from elm-shrin
 tuple5 : ( Investigator a, Investigator b, Investigator c, Investigator d, Investigator e ) -> Investigator ( a, b, c, d, e )
 tuple5 ( invA, invB, invC, invD, invE ) =
   Investigator
-    (Random.zip5 invA.generator invB.generator invC.generator invD.generator invE.generator)
+    (Random.Extra.zip5 invA.generator invB.generator invC.generator invD.generator invE.generator)
     (Shrink.tuple5 ( invA.shrinker, invB.shrinker, invC.shrinker, invD.shrinker, invE.shrinker ))
 
 
-{-| Filter out an Investigator. The resulting Investigator will
-only generate random test values or shrunken values that
-satisfy the predicate. Uses the `keepIf` filter from
-elm-random-extra and the `keepIf` filter from elm-shrink.
+{-| Filter out an Investigator. The resulting Investigator will only generate
+random test values or shrunken values that satisfy the predicate. Uses the
+`keepIf` filter from elm-random-extra and the `keepIf` filter from elm-shrink.
 -}
 keepIf : (a -> Bool) -> Investigator a -> Investigator a
 keepIf predicate inv =
   Investigator
-    (Random.keepIf predicate inv.generator)
+    (Random.Extra.keepIf predicate inv.generator)
     (Shrink.keepIf predicate inv.shrinker)
 
 
-{-| Filter out an Investigator. The resulting Investigator will
-only generate random test values or shrunken values that do not
-satisfy the predicate. Uses the `dropIf` filter from
-elm-random-extra and the `dropIf` filter from elm-shrink.
+{-| Filter out an Investigator. The resulting Investigator will only generate
+random test values or shrunken values that do not satisfy the predicate. Uses
+the `dropIf` filter from elm-random-extra and the `dropIf` filter from
+elm-shrink.
 -}
 dropIf : (a -> Bool) -> Investigator a -> Investigator a
 dropIf predicate inv =
   Investigator
-    (Random.dropIf predicate inv.generator)
+    (Random.Extra.dropIf predicate inv.generator)
     (Shrink.dropIf predicate inv.shrinker)
+
+
+{-| Convert the output of one investigator to another type. This is useful if
+you're testing a function that expects a large model record, but you only need
+to randomize a few fields. You might do this several different ways for a single
+model, so you generate and shrink only the fields relevant to each test.
+
+    type alias Person =
+      { first : String, last : String, age : String }
+
+    spy : Investigator Person
+    spy = map (\age -> Person "James" "Bond" age) .age (rangeInt 0 120)
+
+In order for shrinking to work, you need to pass an inverse function of the
+function being mapped.
+-}
+convert : (a -> b) -> (b -> a) -> Investigator a -> Investigator b
+convert f g inv =
+  Investigator
+    (Random.map f inv.generator)
+    (Shrink.convert f g inv.shrinker)
+
+{-| Map a function over an investigator. This works exactly like `convert`,
+except it does not require an inverse function, and consequently does no
+shrinking.
+-}
+map : (a -> b) -> Investigator a -> Investigator b
+map f inv =
+  Investigator
+    (Random.map f inv.generator)
+    Shrink.noShrink
 
 
 {-| Investigator of functions. Takes an investigator for the return type
@@ -330,32 +363,3 @@ func5 invF =
   Investigator
     (Random.Function.func5 invF.generator)
     (Shrink.noShrink)
-
-
-
-{- } Simple example
-
-
-type alias Vector =
-  { x : Float
-  , y : Float
-  , z : Float
-  }
-
-vector : Investigator Vector
-vector =
-  let
-      shrinker {x,y,z} =
-        Vector
-          `Shrink.map`    shrink float x
-          `Shrink.andMap` shrink float y
-          `Shrink.andMap` shrink float z
-
-      generator =
-        Vector
-          `Random.map`    random float
-          `Random.andMap` random float
-          `Random.andMap` random float
-  in
-      investigator generator shrinker
--}
