@@ -14,7 +14,7 @@ myClaims =
       `that`
         (\list -> reverse (reverse list))
       `is`
-        (identity)
+        identity
       `for`
         list int
 

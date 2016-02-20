@@ -24,7 +24,7 @@ myClaims =
       `that`
         (\list -> reverse (reverse list))
       `is`
-        (identity)
+        identity
       `for`
         list int
 
@@ -52,11 +52,13 @@ Let's examine each component of a claim.
 1. `claim <String>` This is the name of the test and is used when output is displayed, so make it descriptive.
 2. `that <function>` This is the "actual" value, the result of the code or feature under test.
 3. `is <function>` This is the "expected" value. Think of it like a control in a science experiment. It's the value that
-isn't complicated. The actual and expected values should always be equal. The types of these two functions must be the
-same.
+isn't complicated. A test claims that, for any input `x`, `actual x == expected x`.
 4. `for <Investigator>` An `Investigator` is basically a way to randomly produce values for the inputs to the functions.
 So rather than operating on a single example, like unit testing, it can test that a relationship holds for many values.
 There's an entire module full of `Investigator`s so you can test almost anything.
+
+We also group our two claims into a suite. Suites can be nested within other suites as deep as you like, so they're
+useful for organizing tests of many features or modules.
 
 Once you've built your claims, verifying them is easy:
 
@@ -75,7 +77,8 @@ You can dive into these results if you like, but the simplest way to know "did m
 main = ElmTest.elementRunner (Check.Test.evidenceToTest evidence)
 ```
 
-Running the page in `elm reactor` will inform you that all tests have passed.
+Running the page in `elm reactor` will inform you that all tests have passed. (You can find the complete code under
+`examples`.)
 
 ## Debugging a Failing Claim
 
@@ -94,9 +97,13 @@ myClaims =
     tuple (float, float)
 ```
 
-If you put this into the program above, you'd get:
+Note that we're using the `tuple` investigator because the functions we pass must take exactly one argument. If you put
+this into the program above, you'd get:
 
-> Multiplication and division are inverse operations: FAILED. On check 1, found counterexample: (0,0) Expected 0 but got NaN
+> Multiplication and division are inverse operations: FAILED.  
+> On check 1, found counterexample: (0,0)  
+> Expected: 0  
+> Actual: NaN
 
 This result shows that `elm-check` has found a counter example, namely `(0,0)` which falsifies the claim. This is
 obviously true because division by 0 is undefined, hence the `NaN` value.
@@ -107,10 +114,16 @@ We can easily exclude zero with `dropIf`. Change the last line to:
 dropIf (\(x, y) -> y == 0) (tuple (float, float))
 ```
 
+The function (in `Check.Investigator`) will skip any values that don't meet our criteria. This is preferable to changing
+the expected and actual functions because it's simpler, and it doesn't reduce the number of inputs we try. There is also
+`keepIf`.
+
 Now we get a different error.
 
-> Multiplication and division are inverse operations: FAILED. On check 1, found counterexample:
-> (0.0001073802195855836,0.00013967437556471545) Expected 0.0001073802195855836 but got 0.00010738021958558358
+> Multiplication and division are inverse operations, if zero if omitted: FAILED.  
+> On check 1, found counterexample: (0.0001073802195855836,0.00013967437556471545)  
+> Expected: 0.0001073802195855836  
+> Actual: 0.00010738021958558358
 
 Floating point arithmetic strikes again! Notice that the expect and the actual values only differ by a tiny amount.
 
@@ -132,191 +145,47 @@ myClaims =
 The test now passes. This gives us confidence that multiplication and division are very nearly inverses, for any pair of
 floats where the second one isn't zero.
 
-TODO update everything below this
+## Debugging Compiler Errors
 
-## Shrinking
-
-From here we can see that there are a "seed", a "number of shrinking operations performed" and a "before shrinking"
-fields. The "seed" is there in order to reproduce test results. The "shrinking" stuff relates to a feature that
-`elm-check` provides called "shrinking".
-
-Shrinking is the idea of shrinking a test case to a minimal representation. In this case, the investigator `tuple
-(float, float)` has found the original counter example `(-14.074540141521613,-18.307399754018384)`. It has then taken
-this counter example and has searched for another counter example that is more minimal that still disproves the claim.
-It has then repeated this process until it finds no more minimal counter example that still disproves the claim, in this
-case, simply `(0,0)`. Intuitively, `(0,0)` is as minimal an input as it gets. Having such minimal inputs is key to
-diagnosing problem.
-
-As we have seen, this simple claim has enabled us to diagnose two gotchas about division. Get used to this as it is very
-common for individual claims to encounter multiple problems with a system.
-
-
-# Migrating from previous version (prior to Elm 0.15)
-
-If you are currently using `elm-check` in Elm 0.14 code and would like to upgrade your tests to 0.15, you are going to like the new features and the simplified API.
-
-### API CORE
-
-First of all, `elm-check` does not deal simply with the `Random.Generator` type.
-
-The api is centered around two functions:
-
-```elm
-claim : String -> (a -> b) -> (a -> b) -> Investigator a -> Claim
-
-check : Claim -> Int -> Seed -> Evidence
-```
-
-and three types : `Claim`, `Investigator`, and `Evidence`.
-
-- `Claim` is exactly analogous to `Property` in the previous version. The difference between `Claim` and `Property` is that `Claim` captures an expected vs actual relation. This means that `elm-check` can and does generate actual unit tests unlike previously where you could only deal in predicates. If you still want to define claims as predicates, you can use the `claimTrue` function or the `true` combinator if you are using the DSL.
-
-- `Evidence` is the result type from running `check` on a claim or a suite of claims. This is analogous to `TestOutput` in the previous version. The difference is that now `Evidence` has additional information regarding shrinking.
-
-- `Investigator` is the new kid in town. `elm-check` still relies on random generation provided by the `Random.Generator` type but, now, `elm-check` ships with shrinking out of the box and the `Investigator` type provides this.
-
-
-```elm
-type alias Investigator a =
-  { generator : Random.Generator a
-  , shrinker  : Shrinker a
-  }
-
--- type alias Shrinker a = a -> List a
-```
-
-
-If you are familiar with Haskell's QuickCheck, then `Investigator` is exactly like `Arbitrary` in Haskell. From a user point of view, the main difference between using investigators and generators is that investigators are not as composable as generators. You can use operations such as `map`, `flatMap`, etc... on generators but not on investigators. This is due to shrinking. The shrinking algorithms used in `elm-check` can be found in [`elm-shrink`](https://github.com/TheSeamau5/elm-shrink), the companion library to `elm-check`.
-
-But, in case you are worried about the composability, here's a concrete example of implementing your own investigator for a custom data type.
-
-```elm
-type alias Vector =
-  { x : Float
-  , y : Float
-  , z : Float
-  }
-
-vector : Investigator Vector
-vector =
-  let
-      shrinker {x,y,z} =
-        Vector
-          `Shrink.map`    shrink float x
-          `Shrink.andMap` shrink float y
-          `Shrink.andMap` shrink float z
-
-      generator =
-        Vector
-          `Random.map`    random float
-          `Random.andMap` random float
-          `Random.andMap` random float
-  in
-      investigator generator shrinker
-```
-
-As you can see, you have to define separately a shrinker and a generator with the provided `map` and `andMap` functions. The `Random` functions come from [`elm-random-extra`](https://github.com/TheSeamau5/elm-random-extra) and the `Shrink` functions come from [`elm-shrink`](https://github.com/TheSeamau5/elm-shrink). Hopefully, the above code shows that the process is not overly complicated. Note that `Shrink.map` is just an alias for `List.map`. There is unfortunately no magical `map` function on shrinkers. So, you have to capture the data from the record you wish to shrink and then re-map it `Shrink.map`.
-
-
-### Organizing Tests
-
-One of the big features introduced in this version of `elm-check` is the ability to group claims together in suites using the `suite` function.
-
-```elm
-suite : String -> List Claim -> Claim
-```
-
-
-`suite` takes in a descriptive name for a suite and a list of claims and then outputs a claim. This makes suites themselves claims and thus arbitrarily nestable, which is key to represent your modules adequately.
-
-For example, if you wanted to test the core `List` module, you could organize your claims as follows:
-
-```elm
-suite_list =
-  suite "List Suite"
-    [ suite "List Reverse"
-      [ claim_reverse_reverse_identity
-      , claim_reverse_preserves_length
-      , ...
-      ]
-    , suite "List Append"
-      [ claim_append_same_list_doubles_length
-      , claim_append_lists_adds_length
-      , claim_append_reverse_flip_reverse_append
-      , ...
-      ]
-    , ...  
-    ]
-```
-
-You can then simply call `check` or `quickCheck` on the entire suite as opposed to an individual claim as follows:
-
-```elm
-result = quickCheck suite_list
-```
-
-### DSL
-
-The DSL was mentioned above but was not fully fleshed out. First of all, it is important to precise that the DSL provided by `elm-check` is strictly optional. The main function to make claims is `claim` and there are versions of this supporting multiple arities and you are most welcome to use them if you are not into DSLs (or just not into this one).
-
-
-The DSL provided by `elm-check` is super simple and it is used to generate claims. This is how it looks:
-
-```elm
-claim_multiplication_division_inverse =
-  claim
-    "Multiplication and division are inverse operations"
-  `that`
-    (\(x, y) -> x * y / y)
-  `is`
-    (\(x, y) -> x)
-  `for`
-    tuple (float, float)
-```
-
-Without the DSL, this looks like:
-
-```elm
-claim_multiplication_division_inverse =
-  claim
-    "Multiplication and division are inverse operations"
-    (\(x, y) -> x * y / y)
-    (\(x, y) -> x)
-    (tuple (float, float))
-
-```
-
-Simple, just remove those infix functions in the middle.
-
-There are three flavors of these infix functions:
+The DSL can give difficult error messages. Ensure that you're using one of these three patterns:
 
 - claim - that - is - for
 - claim - true - for
 - claim - false - for
 
-The last two are equivalent to using the `claimTrue` and `claimFalse` respectively. If we rewrote the example with `claim-true-for`, it would look like this:
+Ensure that each of these words except `claim` is surrounded by backticks.
 
-```elm
-claim_multiplication_division_inverse =
-  claim
-    "Multiplication and division are inverse operations"
-  `true`
-    (\(x, y) -> x * y / y == x)
-  `for`
-    tuple (float, float)
-```
+If you're putting main claims together in a suite, ensure that you have commas between each claim.
 
-Which is exactly equivalent to:
+Ensure that the two functions you pass have the same type. Ensure the input type matches the investigator. Ensure the
+output type is something equatable -- functions aren't, so be sure you fully apply them.
 
-```elm
-claim_multiplication_division_inverse =
-  claimTrue
-    "Multiplication and division are inverse operations"
-    (\(x, y) -> x * y / y == x)
-    (tuple (float, float))
-```
+## Shrinking
 
-`claim-false-for` is exactly equivalent to `claim-true-for` but it flips the boolean.
+You may have noticed that the second pair of failing values were both very close to zero. This is because of a process
+called *shrinking*, which in the case of floats, happens to bring them closer to zero. It makes lists, strings, and most
+other things smaller.
 
-An important thing to note about the DSL, these functions only work with `claim`. They don't even work with the multi-arity versions of `claim`. So, if you want to do have claims with multiple arguments, you have to use tuples directly. Functions like `claim2` or `claim3` use tuples behind the scenes, but the type system in Elm is such that I couldn't figure out how to introduce the DSL while still providing he ability to work with claims of arbitrary number of arguments. The examples above were picked purposefully to illustrate how this would be done.
+Here's how it works, when `elm-check` encounters a failing test, it has strategies to shrink the input that caused the
+failure. If any of *those* inputs cause a failure, it tries to shrink them in turn, until it has found a minimal failing
+test case. Small examples of failure tend to be much more helpful for debugging.
+
+Here's the thing: all of this happens automatically, for free. You get smaller, easier-to-understand counterexamples
+automatically.
+
+## Customization
+
+We used the `quickCheck` function above to run our tests. There is also `check`, which allows you to supply a random seed
+and specify the number of tests to run per claim, in case you think 100 is insufficient. More tests increase the
+likelihood of finding obscure bugs, but take longer.
+
+Once again, the easiest way to view the results of your tests is `Check.Test.evidenceToTest`. The resulting value can be
+used with any of `elm-test`'s runners, including on the console for CI builds.
+
+If you *really* want to explore the results of your tests, the `Evidence` type is fully exposed and includes a large
+amount of information.
+
+You may want to test a function whose input does not have an investigator available. If possible, map over an existing
+investigator to obtain the one you need. If necessary, you can write your own because the definition of `Investigator`
+is exposed. You'll need to dive into `elm-shrink`, as well and the `Random` module.
 
