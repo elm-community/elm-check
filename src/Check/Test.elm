@@ -26,8 +26,8 @@ evidenceToTest evidence =
 
     Check.Unit (Err { name, numberOfChecks, expected, actual, counterExample }) ->
       ElmTest.test name <| ElmTest.fail
-        <| "On check " ++ toString numberOfChecks ++ ", found counterexample: "
-        ++ counterExample ++ " Expected " ++ expected ++ " but got " ++ actual
+        <| "\nOn check " ++ toString numberOfChecks ++ ", found counterexample: "
+        ++ counterExample ++ "\nExpected: " ++ expected ++ "\nActual:      " ++ actual
 
 
 nChecks : Int -> String
