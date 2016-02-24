@@ -190,3 +190,12 @@ You may want to test a function whose input does not have an producer available.
 existing producer to obtain the one you need. If necessary, you can write your own because the definition of `Producer`
 is exported. You'll need to dive into `elm-shrink`, as well and the `Random` module.
 
+## Upgrading from 2.x
+
+The `Investigator` type has been renamed `Producer`. You should do a find-and-replace. If you defined your own
+producers, you'll need to use the type alias directly (`Investigator generator shrinker`) and not the helper
+(`investigator generator shrinker`).
+
+if you relied on `claimN`, `claimNTrue`, and so on, you will need to rewrite your tests in the DSL. If you used the DSL
+in `Check.Test`, you will need to rewrite your tests using the main DSL, and then use `Check.Test.evidenceToTest` for
+integration with `elm-test`.
