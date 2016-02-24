@@ -139,7 +139,7 @@ myClaims =
   claim
     "Multiplication and division are near inverse operations"
   `true`
-    (\(x, y) -> abs ((x * y / y) - x) < 1e-14)
+    (\(x, y) -> abs ((x * y / y) - x) < 1e-6)
   `for`
     filter (\(x, y) -> y /= 0) (tuple (float, float))
 ```

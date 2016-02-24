@@ -82,7 +82,8 @@ int =
     generator =
       Random.Extra.frequency
         [ ( 3, Random.int -50 50 )
-        , ( 1, Random.int Random.minInt Random.maxInt )
+        , ( 1, Random.int 0 (Random.maxInt - Random.minInt) )
+        , ( 1, Random.int (Random.minInt - Random.maxInt) 0 )
         ]
         (Random.int -50 50)
   in
@@ -99,7 +100,7 @@ rangeInt min max =
     (Shrink.keepIf (\i -> i >= min && i <= max) Shrink.int)
 
 
-{-| A producer for float values.
+{-| A producer for float values. NaN and ±Infinity will not be produced.
 -}
 float : Producer Float
 float =
@@ -107,11 +108,13 @@ float =
     generator =
       Random.Extra.frequency
         [ ( 3, Random.float -50 50 )
-        , ( 1, Random.float (toFloat Random.minInt) (toFloat Random.maxInt) )
+        , ( 1, Random.float -1 1 )
+        , ( 1, Random.float 0 (toFloat <| Random.maxInt - Random.minInt) )
+        , ( 1, Random.float (toFloat <| Random.minInt - Random.maxInt) 0 )
         ]
         (Random.float -50 50)
   in
-    Producer (Random.float -50 50) Shrink.float
+    Producer generator Shrink.float
 
 
 {-| A producer for float values within between a given minimum and maximum
