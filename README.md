@@ -123,9 +123,9 @@ inputs we try.
 Now we get a different error.
 
 > Multiplication and division are inverse operations, if zero is omitted: FAILED.  
-> On check 1, found counterexample: (0.0001073802195855836,0.00013967437556471545)  
-> Expected:  0.0001073802195855836  
-> But It Was: 0.00010738021958558358
+> On check 22, found counterexample: (0.00010805188142299928,0.00017871934691879884)  
+> Expected:   0.00010805188142299928  
+> But It Was: 0.0001080518814229993
 
 Floating point arithmetic strikes again! Notice that the expect and the actual values only differ by a tiny amount.
 
