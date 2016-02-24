@@ -193,7 +193,7 @@ is exported. You'll need to dive into `elm-shrink`, as well and the `Random` mod
 ## Upgrading from 2.x
 
 The `Investigator` type has been renamed `Producer`. You should do a find-and-replace. If you defined your own
-investigators, you'll need to use the type alias directly. So `investigator generator shrinker`) should become `Producer
+investigators, you'll need to use the type alias directly. So `investigator generator shrinker` should become `Producer
 generator shrinker`. `keepIf` and `dropIf` have been changed to `filter`. `void` is now `unit`.
 
 The arguments to `check` have been reordered so that the `Claim` is last.
