@@ -1,22 +1,29 @@
 module Check.Producer (..) where
 
-{-| Sub-module containing the Producer type used by elm-check.
+{-| This is a library of `Producers` you can use to supply values to your tests.
+You can typically pick out which ones you need according to their types.
 
-This sub-module contains several predefined producer generators and means of
-composing them to create your own. Note that most generators provided are
-only well-suited to local development. Property-based testing is by its nature
-a very slow process and is best paired with some sort of continuous integration
-service. Consider making your own, more general producer generators when
-migrating from local to cloud-based.
+A `Producer a` knows how to create values of type `a`. It can create them
+randomly, and it can shrink them to more minimal values. Producers can be
+filtered and mapped over.
 
-# Producer Definition
-@docs Producer
+# Common Producers
+@docs bool, int, rangeInt, float, rangeFloat, percentage, string, maybe, result, list, array
 
-# Basic Producer Generators
-@docs void, bool, order, int, rangeInt, float, percentage, char, upperCaseChar, lowerCaseChar, ascii, unicode, string, maybe, result, list, array, tuple, tuple3, tuple4, tuple5, func, func2, func3, func4, func5
+## Tuple Producers
+@docs tuple, tuple3, tuple4, tuple5
 
-# Working with Producers
-@docs convert, map, keepIf, dropIf
+# Intermezzo: Working with Producers
+@docs Producer, filter, convert, map
+
+# Uncommon Producers
+@docs unit, order
+
+## Character Producers
+@docs char, upperCaseChar, lowerCaseChar, ascii, unicode
+
+## Function Producers
+@docs func, func2, func3, func4, func5
 
 -}
 
@@ -44,32 +51,29 @@ type alias Producer a =
   }
 
 
-{-| Producer void. Uses a constant generator and the `void` shrinker from
-elm-shrink.
+{-| A producer for the unit value. Unit is a type with only one value, commonly
+used as a placeholder.
 -}
-void : Producer ()
-void =
-  Producer (Random.Extra.constant ()) Shrink.void
+unit : Producer ()
+unit =
+  Producer (Random.Extra.constant ()) Shrink.noShrink
 
 
-{-| Producer bool. Uses the bool generator from elm-random-extra and the
-`bool` shrinker from elm-shrink.
+{-| A producer for bool values.
 -}
 bool : Producer Bool
 bool =
   Producer (Random.Bool.bool) Shrink.bool
 
 
-{-| Producer order. Uses the order generator from elm-random-extra and the
-`order` shrinker from elm-shrink.
+{-| A producer for order values.
 -}
 order : Producer Order
 order =
   Producer (Random.Order.order) Shrink.order
 
 
-{-| Producer int. Generates random ints between -50 and 50 and the `int`
-shrinker from elm-shrink. Ideal for local testing.
+{-| A producer for int values.
 -}
 int : Producer Int
 int =
@@ -84,16 +88,15 @@ int =
     Producer generator Shrink.int
 
 
-{-| Producer int constructor. Generates random ints between a given `min`
-and a given `max` value.
+{-| A producer for int values within between a given minimum and maximum value.
 -}
 rangeInt : Int -> Int -> Producer Int
 rangeInt min max =
   Producer (Random.int min max) Shrink.int
+  -- TODO shrinker should stay in range
 
 
-{-| Producer float. Generates random floats between -50 and 50 and the `float`
-shrinker from elm-shrink. Ideal for local testing.
+{-| A producer for float values.
 -}
 float : Producer Float
 float =
@@ -107,10 +110,17 @@ float =
   in
     Producer (Random.float -50 50) Shrink.float
 
+{-| A producer for float values within between a given minimum and maximum value.
+-}
+rangeFloat : Float -> Float -> Producer Float
+rangeFloat min max =
+  Producer (Random.float min max) Shrink.float
+  -- TODO shrinker should stay in range
 
-{-| Producer percentage. Generates random floats between 0.0 and 1.0 and the `float`
-shrinker from elm-shrink. Useful in conjunction with `tuple` to facilitate
-things like generating an array and then selecting one of its elements at random.
+
+{-| A producer for percentage values. Generates random floats between 0.0 and
+1.0. Can be used in conjunction with `tuple` to facilitate things like
+generating an array and then selecting one of its elements at random.
 -}
 percentage : Producer Float
 percentage =
@@ -120,71 +130,60 @@ percentage =
         [ ( 3, Random.float 0 1 )
         , ( 1, Random.Extra.constant 0 )
         , ( 1, Random.Extra.constant 1 )
+        -- this bias makes it seem very unlikely to be a good fit for random indices!
         ]
         (Random.float 0 1)
   in
     Producer generator Shrink.float
 
 
-{-| Producer char. Generates random ascii chars using the `ascii` generator
-from elm-random-extra and the `char` shrinker from elm-shrink. Ideal for local
-testing or if your domain deals exclusively with ascii.
+{-| A producer for ASCII char values.
 -}
 ascii : Producer Char
 ascii =
-  Producer (Random.Char.ascii) Shrink.char
+  Producer Random.Char.ascii Shrink.char
 
 
-{-| Producer char. Generates random ascii chars disregarding the control
-characters using the `char 32 127` generator from elm-random-extra and the
-`character` shrinker from elm-shrink. Ideal for local testing or if your
-domain deals exclusively with ascii and you do not care about control
+{-| A producer for char values. Generates random ascii chars disregarding the control
 characters.
 -}
 char : Producer Char
 char =
-  Producer (Random.Char.char 32 127) Shrink.character
+  Producer (Random.Char.char 32 126) Shrink.character
 
 
-{-| Producer char. Generates random ascii chars using the `upperCaseLatin`
-generator from elm-random-extra and the `character` shrinker from elm-shrink.
+{-| A producer for uppercase char values.
 -}
 upperCaseChar : Producer Char
 upperCaseChar =
   Producer Random.Char.upperCaseLatin Shrink.character
 
 
-{-| Producer char. Generates random ascii chars using the `lowerCaseLatin`
-generator from elm-random-extra and the `character` shrinker from elm-shrink.
+{-| A producer for lowercase char values.
 -}
 lowerCaseChar : Producer Char
 lowerCaseChar =
   Producer Random.Char.lowerCaseLatin Shrink.character
 
 
-{-| Producer char. Generates a random UTF-8 character using the
-`unicode` generator from elm-random-extra and the `char` shrinker from
-elm-shrink.
+{-| A producer for unicode char values.
 -}
 unicode : Producer Char
 unicode =
-  Producer (Random.Char.unicode) Shrink.char
+  Producer Random.Char.unicode Shrink.char
 
 
-{-| Producer string. Generates random ascii strings of size between 0 and 10
-using the `rangeLengthString` generator from elm-random-extra and the `string`
-shrinker from elm-shrink. Ideal for local testing.
+{-| A producer for string values. Generates random printable ascii strings of
+size between 0 and 10.
 -}
 string : Producer String
 string =
   Producer
-    (Random.String.rangeLengthString 0 10 Random.Char.ascii)
-    (Shrink.string)
+    (Random.String.rangeLengthString 0 10 char.generator)
+    Shrink.string
 
 
-{-| Producer maybe constructor. Generates random maybe values from a given
-producer generator using the `maybe` generator constructor from
-elm-random-extra and the `maybe` shrinker constructor from elm-shrink.
+{-| Given a producer of a type, create a producer of a maybe for that type.
 -}
 maybe : Producer a -> Producer (Maybe a)
 maybe prod =
@@ -193,9 +192,8 @@ maybe prod =
     (Shrink.maybe prod.shrinker)
 
 
-{-| Producer result constructor. Generates random result values from a given
-producer generator using the `result` generator constructor from
-elm-random-extra and the `result` shrinker constrctor from elm-shrink.
+{-| Given producers for an error type and a success type, createa a producer for
+a result.
 -}
 result : Producer error -> Producer value -> Producer (Result error value)
 result errSpec valSpec =
@@ -204,22 +202,19 @@ result errSpec valSpec =
     (Shrink.result errSpec.shrinker valSpec.shrinker)
 
 
-{-| Producer list constructor. Generates random lists of values of size
-between 0 and 10 from a given producer generator using the `rangeLengthList`
-generator constructor from elm-random-extra and the `list` shrinker constructor
-from elm-shrink. Ideal for local testing.
+{-| Given a producer of a type, create a producer of a list of that type.
+Generates random lists of values of length between 0 and 10.
 -}
 list : Producer a -> Producer (List a)
 list prod =
   Producer
     (Random.List.rangeLengthList 0 10 prod.generator)
+    -- TODO possibly have longer lists?
     (Shrink.list prod.shrinker)
 
 
-{-| Producer array constructor. Generates random arrays of values of size
-between 0 and 10 from a given producer generator using the `rangeLengthArray`
-generator constructor from elm-random-extra and the `array` shrinker constructor
-from elm-shrink. Ideal for local testing.
+{-| Given a producer of a type, create a producer of an array of that type.
+Generates random arrays of values of length between 0 and 10.
 -}
 array : Producer a -> Producer (Array a)
 array prod =
@@ -228,8 +223,7 @@ array prod =
     (Shrink.array prod.shrinker)
 
 
-{-| Producer 2-tuple constructor. Generates random 2-tuples from a 2-tuple
-of producer generators. Uses the `tuple` shrinker constructor from elm-shrink.
+{-| Turn a tuple of producers into a producer of tuples.
 -}
 tuple : ( Producer a, Producer b ) -> Producer ( a, b )
 tuple ( prodA, prodB ) =
@@ -238,8 +232,7 @@ tuple ( prodA, prodB ) =
     (Shrink.tuple ( prodA.shrinker, prodB.shrinker ))
 
 
-{-| Producer 3-tuple constructor. Generates random 3-tuples from a 3-tuple
-of producer generators. Uses the `tuple3` shrinker constrctor from elm-shrink.
+{-| Turn a 3-tuple of producers into a producer of 3-tuples.
 -}
 tuple3 : ( Producer a, Producer b, Producer c ) -> Producer ( a, b, c )
 tuple3 ( prodA, prodB, prodC ) =
@@ -248,8 +241,7 @@ tuple3 ( prodA, prodB, prodC ) =
     (Shrink.tuple3 ( prodA.shrinker, prodB.shrinker, prodC.shrinker ))
 
 
-{-| Producer 4-tuple constructor. Generates random 4-tuples from a 4-tuple
-of producer generators. Uses the `tuple4` shrinker constrctor from elm-shrink.
+{-| Turn a 4-tuple of producers into a producer of 4-tuples.
 -}
 tuple4 : ( Producer a, Producer b, Producer c, Producer d ) -> Producer ( a, b, c, d )
 tuple4 ( prodA, prodB, prodC, prodD ) =
@@ -258,8 +250,7 @@ tuple4 ( prodA, prodB, prodC, prodD ) =
     (Shrink.tuple4 ( prodA.shrinker, prodB.shrinker, prodC.shrinker, prodD.shrinker ))
 
 
-{-| Producer 5-tuple constructor. Generates random 5-tuples from a 5-tuple
-of producer generators. Uses the `tuple5` shrinker constrctor from elm-shrink.
+{-| Turn a 5-tuple of producers into a producer of 5-tuples.
 -}
 tuple5 : ( Producer a, Producer b, Producer c, Producer d, Producer e ) -> Producer ( a, b, c, d, e )
 tuple5 ( prodA, prodB, prodC, prodD, prodE ) =
@@ -268,27 +259,15 @@ tuple5 ( prodA, prodB, prodC, prodD, prodE ) =
     (Shrink.tuple5 ( prodA.shrinker, prodB.shrinker, prodC.shrinker, prodD.shrinker, prodE.shrinker ))
 
 
-{-| Filter out an Producer. The resulting Producer will only generate
-random test values or shrunken values that satisfy the predicate. Uses the
-`keepIf` filter from elm-random-extra and the `keepIf` filter from elm-shrink.
+{-| Filter the values from a Producer. The resulting Producer will only generate
+random test values or shrunken values that satisfy the predicate. The predicate
+must be satisfiable.
 -}
-keepIf : (a -> Bool) -> Producer a -> Producer a
-keepIf predicate prod =
+filter : (a -> Bool) -> Producer a -> Producer a
+filter predicate prod =
   Producer
     (Random.Extra.keepIf predicate prod.generator)
     (Shrink.keepIf predicate prod.shrinker)
-
-
-{-| Filter out an Producer. The resulting Producer will only generate
-random test values or shrunken values that do not satisfy the predicate. Uses
-the `dropIf` filter from elm-random-extra and the `dropIf` filter from
-elm-shrink.
--}
-dropIf : (a -> Bool) -> Producer a -> Producer a
-dropIf predicate prod =
-  Producer
-    (Random.Extra.dropIf predicate prod.generator)
-    (Shrink.dropIf predicate prod.shrinker)
 
 
 {-| Convert the output of one producer to another type. This is useful if
@@ -322,9 +301,8 @@ map f prod =
     Shrink.noShrink
 
 
-{-| Producer of functions. Takes an producer for the return type
-and returns an producer of functions. Uses the `func` generator from
-elm-random-extra and does not perform any shrinking.
+{-| Given a producer of a return type, create a producer of functions that
+return that type. Does not perform any shrinking.
 -}
 func : Producer b -> Producer (a -> b)
 func prodB =
