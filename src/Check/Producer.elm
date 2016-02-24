@@ -90,11 +90,13 @@ int =
 
 
 {-| A producer for int values within between a given minimum and maximum value.
+Shrunken values will also be within the range.
 -}
 rangeInt : Int -> Int -> Producer Int
 rangeInt min max =
-  Producer (Random.int min max) Shrink.int
-  -- TODO shrinker should stay in range
+  Producer
+    (Random.int min max)
+    (Shrink.keepIf (\i -> i >= min && i <= max) Shrink.int)
 
 
 {-| A producer for float values.
@@ -112,27 +114,27 @@ float =
     Producer (Random.float -50 50) Shrink.float
 
 
-{-| A producer for float values within between a given minimum and maximum value.
+{-| A producer for float values within between a given minimum and maximum
+value. Shrunken values will also be within the range.
 -}
 rangeFloat : Float -> Float -> Producer Float
 rangeFloat min max =
-  Producer (Random.float min max) Shrink.float
-  -- TODO shrinker should stay in range
+  Producer
+    (Random.float min max)
+    (Shrink.keepIf (\i -> i >= min && i <= max) Shrink.float)
 
 
-{-| A producer for percentage values. Generates random floats between 0.0 and
-1.0. Can be used in conjunction with `tuple` to facilitate things like
-generating an array and then selecting one of its elements at random.
+{-| A producer for percentage values. Generates random floats between `0.0` and
+`1.0`.
 -}
 percentage : Producer Float
 percentage =
   let
     generator =
       Random.Extra.frequency
-        [ ( 3, Random.float 0 1 )
+        [ ( 8, Random.float 0 1 )
         , ( 1, Random.Extra.constant 0 )
         , ( 1, Random.Extra.constant 1 )
-        -- this bias makes it seem very unlikely to be a good fit for random indices!
         ]
         (Random.float 0 1)
   in
