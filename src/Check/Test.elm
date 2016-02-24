@@ -1,8 +1,8 @@
 module Check.Test (evidenceToTest) where
 
-{-| Submodule providing integration with elm-test.
+{-| This module provides integration with `elm-test`.
 
-# Convert to tests
+# Convert to Tests
 @docs evidenceToTest
 
 -}

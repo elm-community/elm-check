@@ -1,57 +1,41 @@
 module Check (..) where
 
-{-| Property Based Testing module in Elm.
+{-|
 
-# A DSL for writing claims
-
-`elm-check` provides a shorthand domain-specific language (DSL) for authoring
-claims. The goal of this DSL is to help improve readability and encode intent in
-the phrasing of your test code.
-
-With the DSL, claims read as either:
+A toolkit for writing property-based tests, which take the form of `Claim`s. A
+`Claim` is made using the provided domain-specific language (DSL). A single
+`Claim` can be written in one of these ways:
 
 1. claim - (string) - that - (actual) - is - (expected) - for - (producer)
 2. claim - (string) - true - (predicate) - for - (producer)
 3. claim - (string) - false - (predicate) - for - (producer)
 
 
-**Example:**
+For example,
 
-    claim_multiplication_by_one_noop =
+    claim_multiplication_identity =
       claim
         "Multiplying by one does not change a number"
-      `true`
-        (\n -> n * 1 == n)
+      `that`
+        (\n -> n * 1)
+      `is`
+        identity
       `for`
         int
 
-    claim_reverse_append =
-      claim
-        "Append then reverse is equivalent to reverse then append"
-      `that`
-        (\(l1, l2) -> List.reverse (l1 ++ l2))
-      `is`
-        (\(l1, l2) -> List.reverse l1 ++ List.reverse l2)
-      `for`
-        tuple (list int, list int)
-
-
-It is important to note that, if you wish to deal with multi-arity functions
-using this DSL, you must deal explicitly in tuples.
+See the README for more information.
 
 *Warning: The DSL follows a very strict format. Deviating from this format will
-yield potentially unintelligible type errors. While not all of the type errors
-are strictly necessary, they are there to ensure that the test is authored in
-a uniform way. As a result, the following functions have horrendous type
-signatures and you are better off ignoring them.*
+yield potentially unintelligible type errors. The following functions have
+horrendous type signatures and you are better off ignoring them.*
 
 @docs claim, that, is, for, true, false
 
-# Check a claim
-@docs quickCheck, check
-
-# Group claims into a suite
+# Group Claims
 @docs suite
+
+# Check a Claim
+@docs quickCheck, check
 
 # Types
 The results of checking a claim are given back in the types defined here. You
@@ -135,33 +119,7 @@ type alias FailureOptions =
   }
 
 
-{-| Make a claim about a system.
-
-    claim nameOfClaim actualStatement expectedStatement producer
-
-1. The `nameOfClaim` is a string you pass in order to name your claim.
-This is very useful when trying to debug or reading reports.
-2. The `actualStatement` is a function which states something about your
-system. The result of which will be compared by equality `==` to the
-result of the `expectedStatement`.
-3. The `expectedStatement` is a function which states something which
-the `actualStatement` should conform to or be equivalent to. The result of
-which will be compared by equality `==` to the result of the `actualStatement`.
-4. The `producer` is an producer used to generate random values to be passed
-to the `actualStatement` and `expectedStatement` in order to attempt to
-disprove the claim. If a counter example is found, the `producer` will then
-shrink the counter example until it yields a minimal counter example which
-is then easy to debug.
-
-
-Example :
-
-    claim_sort_idempotent =
-      claim "Sort is idempotent"
-        (\list -> List.sort (List.sort (list))
-        (\list -> List.sort (list))
-        (list int)
-
+{-|
 -}
 claim : String -> (a -> b) -> (a -> b) -> Producer a -> Claim
 claim name actualStatement expectedStatement producer =
@@ -345,36 +303,35 @@ claim name actualStatement expectedStatement producer =
                       }
 
 
-{-| Check a claim.
+{-| Check a claim and produce evidence.
 
 To check a claim, you need to provide the number of checks which check will
-perform as well a random seed. Given a random seed and a number of checks,
-`check` will always yield the same result. Thus, `check` is especially useful
-when you wish to reproduce checks.
+perform as well a random seed. You can set up a CI server to run through a large
+number of checks with a randomized seed.
 
-    check claim 100 (Random.initialSeed 1)
+    aggressiveCheck : Claim -> Evidence
+    aggressiveCheck =
+      check 2000 (Random.initialSeed 0xFFFF)
 -}
-check : Claim -> Int -> Seed -> Evidence
-check claim n seed =
+check : Int -> Seed -> Claim -> Evidence
+check n seed claim =
   case claim of
     Claim name f ->
       f n seed
 
     Suite name claims ->
-      Multiple name (List.map (\c -> check c n seed) claims)
+      Multiple name (List.map (check n seed) claims)
 
 
-{-| Quick check a claim.
+{-| Quickly check a claim.
 
-This function is very useful when checking claims locally. `quickCheck` will
-perform 100 checks and use `Random.initialSeed 1` as the random seed.
-
-    quickCheck claim =
-      check claim 100 (Random.initialSeed 1)
+This function is very useful when checking claims in local development.
+`quickCheck` will perform 100 checks and use `Random.initialSeed 1` as the
+random seed.
 -}
 quickCheck : Claim -> Evidence
-quickCheck claim =
-  check claim 100 (Random.initialSeed 1)
+quickCheck =
+  check 100 (Random.initialSeed 1)
 
 
 {-| Group a list of claims into a suite. This is very useful in order to

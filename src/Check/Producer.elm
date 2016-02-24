@@ -1,6 +1,6 @@
 module Check.Producer (..) where
 
-{-| This is a library of `Producers` you can use to supply values to your tests.
+{-| This is a library of `Producer`s you can use to supply values to your tests.
 You can typically pick out which ones you need according to their types.
 
 A `Producer a` knows how to create values of type `a`. It can create them
@@ -11,9 +11,10 @@ filtered and mapped over.
 @docs bool, int, rangeInt, float, rangeFloat, percentage, string, maybe, result, list, array
 
 ## Tuple Producers
+If your expected and actual functions need more than one input, pass them in as a tuple.
 @docs tuple, tuple3, tuple4, tuple5
 
-# Intermezzo: Working with Producers
+# Working with Producers
 @docs Producer, filter, convert, map
 
 # Uncommon Producers
@@ -110,6 +111,7 @@ float =
   in
     Producer (Random.float -50 50) Shrink.float
 
+
 {-| A producer for float values within between a given minimum and maximum value.
 -}
 rangeFloat : Float -> Float -> Producer Float
@@ -173,8 +175,8 @@ unicode =
   Producer Random.Char.unicode Shrink.char
 
 
-{-| A producer for string values. Generates random printable ascii strings of
-size between 0 and 10.
+{-| A producer for string values. Generates random printable ascii strings whose
+length is between 0 and 10.
 -}
 string : Producer String
 string =

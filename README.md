@@ -193,9 +193,11 @@ is exported. You'll need to dive into `elm-shrink`, as well and the `Random` mod
 ## Upgrading from 2.x
 
 The `Investigator` type has been renamed `Producer`. You should do a find-and-replace. If you defined your own
-producers, you'll need to use the type alias directly (`Investigator generator shrinker`) and not the helper
-(`investigator generator shrinker`). `keepIf` and `dropIf` have been changed to `filter`. `void` is now `unit`.
+investigators, you'll need to use the type alias directly. So `investigator generator shrinker`) should become `Producer
+generator shrinker`. `keepIf` and `dropIf` have been changed to `filter`. `void` is now `unit`.
 
-if you relied on `claimN`, `claimNTrue`, and so on, you will need to rewrite your tests in the DSL. If you used the DSL
+The arguments to `check` have been reordered so that the `Claim` is last.
+
+If you relied on `claimN`, `claimNTrue`, and so on, you will need to rewrite your tests in the DSL. If you used the DSL
 in `Check.Test`, you will need to rewrite your tests using the main DSL, and then use `Check.Test.evidenceToTest` for
 integration with `elm-test`.
