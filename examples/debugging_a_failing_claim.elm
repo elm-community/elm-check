@@ -1,5 +1,5 @@
 import Check exposing (Claim, Evidence, suite, claim, that, is, for, true, quickCheck)
-import Check.Investigator exposing (tuple, float, dropIf)
+import Check.Producer exposing (tuple, float, dropIf)
 import Check.Test
 
 import ElmTest
@@ -18,7 +18,7 @@ testWithZero =
 testWithoutZero : Claim
 testWithoutZero =
   claim
-    "Multiplication and division are inverse operations, if zero if omitted"
+    "Multiplication and division are inverse operations, if zero is omitted"
   `that`
     (\(x, y) -> x * y / y)
   `is`
@@ -29,9 +29,9 @@ testWithoutZero =
 testForNearness : Claim
 testForNearness =
   claim
-    "Multiplication and division are near inverse operations, if zero if omitted"
+    "Multiplication and division are near inverse operations, if zero is omitted"
   `true`
-    (\(x, y) -> abs ((x * y / y) - x) < 1e-10)
+    (\(x, y) -> abs ((x * y / y) - x) < 1e-14)
   `for`
     dropIf (\(x, y) -> y == 0) (tuple (float, float))
 

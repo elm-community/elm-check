@@ -55,9 +55,9 @@ Let's examine each component of a claim.
 2. `that <function>` This is the "actual" value, the result of the code or feature under test.
 3. `is <function>` This is the "expected" value. Think of it like a control in a science experiment. It's the value that
 isn't complicated. A test claims that, for any input `x`, `actual x == expected x`.
-4. `for <Investigator>` An `Investigator` is basically a way to randomly produce values for the inputs to the functions.
+4. `for <Producer>` An `Producer` is basically a way to randomly produce values for the inputs to the functions.
 So rather than operating on a single example, like unit testing, it can test that a relationship holds for many values.
-There's an entire module full of `Investigator`s so you can test almost anything.
+There's an entire module full of `Producer`s so you can test almost anything.
 
 We also group our two claims into a suite. Suites can be nested within other suites as deep as you like, so they're
 useful for organizing tests of many features or modules.
@@ -99,13 +99,13 @@ myClaims =
     tuple (float, float)
 ```
 
-Note that we're using the `tuple` investigator because the functions we pass must take exactly one argument. If you put
+Note that we're using the `tuple` producer because the functions we pass must take exactly one argument. If you put
 this into the program above, you'd get:
 
 > Multiplication and division are inverse operations: FAILED.  
 > On check 1, found counterexample: (0,0)  
-> Expected: 0  
-> Actual: NaN
+> Expected:  0  
+> But It Was: NaN
 
 This result shows that `elm-check` has found a counter example, namely `(0,0)` which falsifies the claim. This is
 obviously true because division by 0 is undefined, hence the `NaN` value.
@@ -116,16 +116,16 @@ We can easily exclude zero with `dropIf`. Change the last line to:
 dropIf (\(x, y) -> y == 0) (tuple (float, float))
 ```
 
-The function (in `Check.Investigator`) will skip any values that don't meet our criteria. This is preferable to changing
+The function (in `Check.Producer`) will skip any values that don't meet our criteria. This is preferable to changing
 the expected and actual functions because it's simpler, and it doesn't reduce the number of inputs we try. There is also
 `keepIf`.
 
 Now we get a different error.
 
-> Multiplication and division are inverse operations, if zero if omitted: FAILED.  
+> Multiplication and division are inverse operations, if zero is omitted: FAILED.  
 > On check 1, found counterexample: (0.0001073802195855836,0.00013967437556471545)  
-> Expected: 0.0001073802195855836  
-> Actual: 0.00010738021958558358
+> Expected:  0.0001073802195855836  
+> But It Was: 0.00010738021958558358
 
 Floating point arithmetic strikes again! Notice that the expect and the actual values only differ by a tiny amount.
 
@@ -149,17 +149,17 @@ floats where the second one isn't zero.
 
 ## Debugging Compiler Errors
 
-The DSL can give difficult error messages. Ensure that you're using one of these three patterns:
+The DSL can give difficult error messages. Ensure that each claim uses one of these three patterns:
 
-- claim - that - is - for
-- claim - true - for
-- claim - false - for
+1. claim - (string) - that - (actual) - is - (expected) - for - (producer)
+2. claim - (string) - true - (predicate) - for - (producer)
+3. claim - (string) - false - (predicate) - for - (producer)
 
 Ensure that each of these words except `claim` is surrounded by backticks.
 
 If you're putting main claims together in a suite, ensure that you have commas between each claim.
 
-Ensure that the two functions you pass have the same type. Ensure the input type matches the investigator. Ensure the
+Ensure that the two functions you pass have the same type. Ensure the input type matches the producer. Ensure the
 output type is something equatable -- functions aren't, so be sure you fully apply them.
 
 ## Shrinking
@@ -172,8 +172,7 @@ Here's how it works, when `elm-check` encounters a failing test, it has strategi
 failure. If any of *those* inputs cause a failure, it tries to shrink them in turn, until it has found a minimal failing
 test case. Small examples of failure tend to be much more helpful for debugging.
 
-Here's the thing: all of this happens automatically, for free. You get smaller, easier-to-understand counterexamples
-automatically.
+Here's the thing: all of this happens automatically. You get smaller, easier-to-understand counterexamples, for free.
 
 ## Customization
 
@@ -187,7 +186,7 @@ used with any of `elm-test`'s runners, including on the console for CI builds.
 If you *really* want to explore the results of your tests, the `Evidence` type is fully exposed and includes a large
 amount of information.
 
-You may want to test a function whose input does not have an investigator available. If possible, map over an existing
-investigator to obtain the one you need. If necessary, you can write your own because the definition of `Investigator`
-is exposed. You'll need to dive into `elm-shrink`, as well and the `Random` module.
+You may want to test a function whose input does not have an producer available. If possible, convert or map over an
+existing producer to obtain the one you need. If necessary, you can write your own because the definition of `Producer`
+is exported. You'll need to dive into `elm-shrink`, as well and the `Random` module.
 

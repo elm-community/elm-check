@@ -1,7 +1,7 @@
 import List exposing (reverse, length)
 
 import Check exposing (Claim, Evidence, suite, claim, that, is, for, quickCheck)
-import Check.Investigator exposing (list, int)
+import Check.Producer exposing (list, int)
 import Check.Test
 
 import ElmTest

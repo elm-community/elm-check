@@ -8,7 +8,7 @@
     ],
     "exposed-modules": [
         "Check",
-        "Check.Investigator",
+        "Check.Producer",
         "Check.Test"
     ],
     "dependencies": {

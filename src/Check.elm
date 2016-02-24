@@ -10,9 +10,9 @@ the phrasing of your test code.
 
 With the DSL, claims read as either:
 
-1. claim - (string) - that - (actual) - is - (expected) - for - (investigator)
-2. claim - (string) - true - (predicate) - for - (investigator)
-3. claim - (string) - false - (predicate) - for - (investigator)
+1. claim - (string) - that - (actual) - is - (expected) - for - (producer)
+2. claim - (string) - true - (predicate) - for - (producer)
+3. claim - (string) - false - (predicate) - for - (producer)
 
 
 **Example:**
@@ -63,7 +63,7 @@ with `elm-check`'s runners.
 import Lazy.List
 import Random exposing (Seed, Generator)
 import Trampoline exposing (Trampoline(..), trampoline)
-import Check.Investigator exposing (Investigator)
+import Check.Producer exposing (Producer)
 
 
 {-| A Claim is an object that makes a claim of truth about a system.
@@ -137,7 +137,7 @@ type alias FailureOptions =
 
 {-| Make a claim about a system.
 
-    claim nameOfClaim actualStatement expectedStatement investigator
+    claim nameOfClaim actualStatement expectedStatement producer
 
 1. The `nameOfClaim` is a string you pass in order to name your claim.
 This is very useful when trying to debug or reading reports.
@@ -147,9 +147,9 @@ result of the `expectedStatement`.
 3. The `expectedStatement` is a function which states something which
 the `actualStatement` should conform to or be equivalent to. The result of
 which will be compared by equality `==` to the result of the `actualStatement`.
-4. The `investigator` is an investigator used to generate random values to be passed
+4. The `producer` is an producer used to generate random values to be passed
 to the `actualStatement` and `expectedStatement` in order to attempt to
-disprove the claim. If a counter example is found, the `investigator` will then
+disprove the claim. If a counter example is found, the `producer` will then
 shrink the counter example until it yields a minimal counter example which
 is then easy to debug.
 
@@ -163,8 +163,8 @@ Example :
         (list int)
 
 -}
-claim : String -> (a -> b) -> (a -> b) -> Investigator a -> Claim
-claim name actualStatement expectedStatement investigator =
+claim : String -> (a -> b) -> (a -> b) -> Producer a -> Claim
+claim name actualStatement expectedStatement producer =
   -------------------------------------------------------------------
   -- QuickCheck Algorithm with Shrinking :
   -- 1. Find a counter example within a given number of checks
@@ -206,7 +206,7 @@ claim name actualStatement expectedStatement investigator =
                 --------------------------------------------------------------
                 -- Body of loop:
                 -- 1. We generate a new random value and the next seed using
-                --    the investigator's random generator and the previous seed.
+                --    the producer's random generator and the previous seed.
                 -- 2. We calculate the actual outcome and the expected
                 --    outcome from the given `actualStatement` and
                 --    `expectedStatement` respectively
@@ -217,7 +217,7 @@ claim name actualStatement expectedStatement investigator =
                 -- 5. Else, we have found our counter example.
                 --------------------------------------------------------------
                 ( value, nextSeed ) =
-                  Random.generate investigator.generator seed
+                  Random.generate producer.generator seed
 
                 actual =
                   actualStatement value
@@ -276,7 +276,7 @@ claim name actualStatement expectedStatement investigator =
                     -- the given `counterExample`.
                     -- shrunkenCounterExamples : List a
                     shrunkenCounterExamples =
-                      investigator.shrinker counterExample
+                      producer.shrinker counterExample
 
                     -- Keep only the counter examples that disprove the claim.
                     -- (i.e. they violate `actual == expected`)
@@ -388,30 +388,30 @@ suite name claims =
 
 
 {-| -}
-that : ((a -> b) -> (a -> b) -> Investigator a -> Claim) -> (a -> b) -> ((a -> b) -> Investigator a -> Claim)
+that : ((a -> b) -> (a -> b) -> Producer a -> Claim) -> (a -> b) -> ((a -> b) -> Producer a -> Claim)
 that f x =
   f x
 
 
 {-| -}
-is : ((a -> b) -> Investigator a -> Claim) -> (a -> b) -> (Investigator a -> Claim)
+is : ((a -> b) -> Producer a -> Claim) -> (a -> b) -> (Producer a -> Claim)
 is f x =
   f x
 
 
 {-| -}
-for : (Investigator a -> Claim) -> Investigator a -> Claim
+for : (Producer a -> Claim) -> Producer a -> Claim
 for f x =
   f x
 
 
 {-| -}
-true : ((a -> Bool) -> (a -> Bool) -> Investigator a -> Claim) -> (a -> Bool) -> (Investigator a -> Claim)
+true : ((a -> Bool) -> (a -> Bool) -> Producer a -> Claim) -> (a -> Bool) -> (Producer a -> Claim)
 true f pred =
   f pred (always True)
 
 
 {-| -}
-false : ((a -> Bool) -> (a -> Bool) -> Investigator a -> Claim) -> (a -> Bool) -> (Investigator a -> Claim)
+false : ((a -> Bool) -> (a -> Bool) -> Producer a -> Claim) -> (a -> Bool) -> (Producer a -> Claim)
 false f pred =
   f pred (always False)
