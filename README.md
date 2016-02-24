@@ -5,6 +5,8 @@ claims relating input and output. These claims can then be automatically tested 
 as desired. If a failing input is found, it can be "shrunk" to compute a minimal failing case which is more
 representative of the bug. The goal of `elm-check` is to automate this process.
 
+Property-based testing can replace many unit tests, but it cannot test asynchronous, UI, or end-to-end functionality.
+
 ## Quick-Start Guide
 
 Suppose you wanted to test `List.reverse`. A correct implementation will obey a number of properties, *regardless of the
