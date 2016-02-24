@@ -1,5 +1,5 @@
 import Check exposing (Claim, Evidence, suite, claim, that, is, for, true, quickCheck)
-import Check.Producer exposing (tuple, float, dropIf)
+import Check.Producer exposing (tuple, float, filter)
 import Check.Test
 
 import ElmTest
@@ -24,7 +24,7 @@ testWithoutZero =
   `is`
     (\(x, y) -> x)
   `for`
-    dropIf (\(x, y) -> y == 0) (tuple (float, float))
+    filter (\(x, y) -> y /= 0) (tuple (float, float))
 
 testForNearness : Claim
 testForNearness =
@@ -33,7 +33,7 @@ testForNearness =
   `true`
     (\(x, y) -> abs ((x * y / y) - x) < 1e-14)
   `for`
-    dropIf (\(x, y) -> y == 0) (tuple (float, float))
+    filter (\(x, y) -> y /= 0) (tuple (float, float))
 
 myClaims : Claim
 myClaims =

@@ -110,15 +110,15 @@ this into the program above, you'd get:
 This result shows that `elm-check` has found a counter example, namely `(0,0)` which falsifies the claim. This is
 obviously true because division by 0 is undefined, hence the `NaN` value.
 
-We can easily exclude zero with `dropIf`. Change the last line to:
+We can easily exclude zero by filtering the producer. Change the last line to:
 
 ```elm
-dropIf (\(x, y) -> y == 0) (tuple (float, float))
+filter (\(x, y) -> y /= 0) (tuple (float, float))
 ```
 
-The function (in `Check.Producer`) will skip any values that don't meet our criteria. This is preferable to changing
-the expected and actual functions because it's simpler, and it doesn't reduce the number of inputs we try. There is also
-`keepIf`.
+This function (in `Check.Producer`) will only use values that meet our criteria (not being equal to zero). This is
+preferable to changing the expected and actual functions because it's simpler, and it doesn't reduce the number of
+inputs we try.
 
 Now we get a different error.
 
@@ -139,9 +139,9 @@ myClaims =
   claim
     "Multiplication and division are near inverse operations"
   `true`
-    (\(x, y) -> abs ((x * y / y) - x) < 1e-10)
+    (\(x, y) -> abs ((x * y / y) - x) < 1e-14)
   `for`
-    dropIf (\(x, y) -> y == 0) (tuple (float, float))
+    filter (\(x, y) -> y /= 0) (tuple (float, float))
 ```
 
 The test now passes. This gives us confidence that multiplication and division are very nearly inverses, for any pair of
@@ -194,7 +194,7 @@ is exported. You'll need to dive into `elm-shrink`, as well and the `Random` mod
 
 The `Investigator` type has been renamed `Producer`. You should do a find-and-replace. If you defined your own
 producers, you'll need to use the type alias directly (`Investigator generator shrinker`) and not the helper
-(`investigator generator shrinker`).
+(`investigator generator shrinker`). `keepIf` and `dropIf` have been changed to `filter`. `void` is now `unit`.
 
 if you relied on `claimN`, `claimNTrue`, and so on, you will need to rewrite your tests in the DSL. If you used the DSL
 in `Check.Test`, you will need to rewrite your tests using the main DSL, and then use `Check.Test.evidenceToTest` for
