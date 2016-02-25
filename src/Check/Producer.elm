@@ -82,7 +82,7 @@ int =
     generator =
       Random.Extra.frequency
         [ ( 3, Random.int -50 50 )
-        , ( 0.2, Random.Extra.constant 0)
+        , ( 0.2, Random.Extra.constant 0 )
         , ( 1, Random.int 0 (Random.maxInt - Random.minInt) )
         , ( 1, Random.int (Random.minInt - Random.maxInt) 0 )
         ]
@@ -109,7 +109,7 @@ float =
     generator =
       Random.Extra.frequency
         [ ( 3, Random.float -50 50 )
-        , ( 0.5, Random.Extra.constant 0)
+        , ( 0.5, Random.Extra.constant 0 )
         , ( 1, Random.float -1 1 )
         , ( 1, Random.float 0 (toFloat <| Random.maxInt - Random.minInt) )
         , ( 1, Random.float (toFloat <| Random.minInt - Random.maxInt) 0 )
@@ -298,6 +298,7 @@ convert f g prod =
   Producer
     (Random.map f prod.generator)
     (Shrink.convert f g prod.shrinker)
+
 
 {-| Map a function over an producer. This works exactly like `convert`,
 except it does not require an invderse function, and consequently does no
