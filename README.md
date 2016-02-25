@@ -5,15 +5,15 @@ claims relating input and output. These claims can then be automatically tested 
 as desired. If a failing input is found, it can be "shrunk" to compute a minimal failing case which is more
 representative of the bug. The goal of `elm-check` is to automate this process.
 
-Property-based testing can replace many unit tests, but it cannot test asynchronous, UI, or end-to-end functionality.
+This library can replace many unit tests, but it cannot test asynchronous, UI, or end-to-end functionality.
 
 ## Quick-Start Guide
 
-Suppose you wanted to test `List.reverse`. A correct implementation will obey a number of properties, *regardless of the
-list being reversed*, including:
+Suppose you wanted to test `List.reverse`. A correct implementation will obey a number of properties (or assertions),
+*regardless of the list being reversed*, including:
 
-1. Reversing a list twice yields the original list
-2. Reversing does not modify the length of a list
+1. Reversing a list twice yields the original list.
+2. Reversing does not modify the length of a list.
 
 You can make these claims in `elm-check` as follows:
 
@@ -55,8 +55,8 @@ Let's examine each component of a claim.
 2. `that <function>` This is the "actual" value, the result of the code or feature under test.
 3. `is <function>` This is the "expected" value. Think of it like a control in a science experiment. It's the value that
 isn't complicated. A test claims that, for any input `x`, `actual x == expected x`.
-4. `for <Producer>` An `Producer` is basically a way to randomly produce values for the inputs to the functions.
-So rather than operating on a single example, like unit testing, it can test that a relationship holds for many values.
+4. `for <Producer>` An `Producer` is basically a way to randomly create values for the inputs to the functions. So
+rather than operating on a single example, like unit testing, it can test that a relationship holds for many values.
 There's an entire module full of `Producer`s so you can test almost anything.
 
 We also group our two claims into a suite. Suites can be nested within other suites as deep as you like, so they're
@@ -103,7 +103,7 @@ Note that we're using the `tuple` producer because the functions we pass must ta
 this into the program above, you'd get:
 
 > Multiplication and division are inverse operations: FAILED.  
-> On check 1, found counterexample: (0,0)  
+> On check 23, found counterexample: (0,0)  
 > Expected:  0  
 > But It Was: NaN
 
@@ -123,9 +123,9 @@ inputs we try.
 Now we get a different error.
 
 > Multiplication and division are inverse operations, if zero is omitted: FAILED.  
-> On check 22, found counterexample: (0.00010805188142299928,0.00017871934691879884)  
-> Expected:   0.00010805188142299928  
-> But It Was: 0.0001080518814229993
+> On check 20, found counterexample: (0.00019869294196802492,0.0001670854544888915)  
+> Expected:   0.00019869294196802492  
+> But It Was: 0.00019869294196802494
 
 Floating point arithmetic strikes again! Notice that the expect and the actual values only differ by a tiny amount.
 
@@ -162,11 +162,18 @@ If you're putting main claims together in a suite, ensure that you have commas b
 Ensure that the two functions you pass have the same type. Ensure the input type matches the producer. Ensure the
 output type is something equatable -- functions aren't, so be sure you fully apply them.
 
+## Writing Good Properties
+
+It can be difficult to write claims about a system, especially if it's not simple mathematics or a data structure.
+
+[Jessica Kerr](https://vimeo.com/106759186) suggests writing "a box around the API". Rather than specifying an expected
+value exactly, you should try to indicate a range in which it can reasonably fall.
+
 ## Shrinking
 
-You may have noticed that the second pair of failing values were both very close to zero. This is because of a process
-called *shrinking*, which in the case of floats, happens to bring them closer to zero. It makes lists, strings, and most
-other things smaller.
+You may have noticed in the division example that the second pair of failing values were both very close to zero. This
+is because of a process called *shrinking*, which in the case of floats, happens to bring them closer to zero. It makes
+lists, strings, and most other things smaller.
 
 Here's how it works, when `elm-check` encounters a failing test, it has strategies to shrink the input that caused the
 failure. If any of *those* inputs cause a failure, it tries to shrink them in turn, until it has found a minimal failing
@@ -200,4 +207,4 @@ The arguments to `check` have been reordered so that the `Claim` is last.
 
 If you relied on `claimN`, `claimNTrue`, and so on, you will need to rewrite your tests in the DSL. If you used the DSL
 in `Check.Test`, you will need to rewrite your tests using the main DSL, and then use `Check.Test.evidenceToTest` for
-integration with `elm-test`.
+Integration with `elm-test`.
