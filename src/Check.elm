@@ -38,10 +38,13 @@ horrendous type signatures and you are better off ignoring them.*
 @docs quickCheck, check
 
 # Types
+@docs Claim
+
+## Evidence
 The results of checking a claim are given back in the types defined here. You
 can examine them yourself, or see `Check.Test` to convert them into tests to use
 with `elm-check`'s runners.
-@docs Claim, Evidence, UnitEvidence, SuccessOptions, FailureOptions
+@docs Evidence, UnitEvidence, SuccessOptions, FailureOptions
 -}
 
 import Lazy.List
@@ -305,9 +308,9 @@ claim name actualStatement expectedStatement producer =
 
 {-| Check a claim and produce evidence.
 
-To check a claim, you need to provide the number of checks which check will
-perform as well a random seed. You can set up a CI server to run through a large
-number of checks with a randomized seed.
+To check a claim, you need to provide the number of checks to perform, and a
+random seed. You can set up a CI server to run through a large number of checks
+with a randomized seed.
 
     aggressiveCheck : Claim -> Evidence
     aggressiveCheck =

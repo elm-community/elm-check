@@ -43,8 +43,11 @@ import Random.List
 import Random.Array
 
 
-{-| An Producer type is a Random Generator paired with a shrinking strategy,
-or Shrinker. Shrinkers are defined in `elm-shrink`.
+{-| An Producer type is a
+[Random](http://package.elm-lang.org/packages/elm-lang/core/latest/Random)
+`Generator` paired with a shrinking strategy, or Shrinker. Shrinkers are defined
+in
+[`elm-shrink`](http://package.elm-lang.org/packages/NoRedInk/elm-shrink/latest/).
 -}
 type alias Producer a =
   { generator : Generator a
@@ -91,8 +94,8 @@ int =
     Producer generator Shrink.int
 
 
-{-| A producer for int values within between a given minimum and maximum value.
-Shrunken values will also be within the range.
+{-| A producer for int values within between a given minimum and maximum value,
+inclusive. Shrunken values will also be within the range.
 -}
 rangeInt : Int -> Int -> Producer Int
 rangeInt min max =
@@ -120,7 +123,7 @@ float =
 
 
 {-| A producer for float values within between a given minimum and maximum
-value. Shrunken values will also be within the range.
+value, inclusive. Shrunken values will also be within the range.
 -}
 rangeFloat : Float -> Float -> Producer Float
 rangeFloat min max =

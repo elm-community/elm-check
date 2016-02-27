@@ -1,6 +1,7 @@
 module Check.Test (evidenceToTest) where
 
-{-| This module provides integration with `elm-test`.
+{-| This module provides integration with
+[`elm-test`](http://package.elm-lang.org/packages/deadfoxygrandpa/elm-test/latest/).
 
 # Convert to Tests
 @docs evidenceToTest
