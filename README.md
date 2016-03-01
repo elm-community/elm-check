@@ -73,7 +73,7 @@ evidence = quickCheck myClaims
 disprove each claim. `quickCheck` will then return a descriptive result of the checks performed, in the `Evidence` type.
 
 You can dive into these results if you like, but the simplest way to know "did my tests pass" is to use
-[elm-test](http://package.elm-lang.org/packages/deadfoxygrandpa/elm-test/latest/ElmTest).
+[elm-test](http://package.elm-lang.org/packages/deadfoxygrandpa/elm-test/latest).
 
 ```elm
 main = ElmTest.elementRunner (Check.Test.evidenceToTest evidence)
