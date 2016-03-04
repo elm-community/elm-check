@@ -291,7 +291,7 @@ model, so you generate and shrink only the fields relevant to each test.
       { first : String, last : String, age : String }
 
     spy : Producer Person
-    spy = map (\age -> Person "James" "Bond" age) .age (rangeInt 0 120)
+    spy = convert (\age -> Person "James" "Bond" age) .age (rangeInt 0 120)
 
 In order for shrinking to work, you need to pass an inverse function of the
 function being mapped.
