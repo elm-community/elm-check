@@ -341,6 +341,13 @@ quickCheck =
 group similar claims together.
 
     suite nameOfSuite listOfClaims
+
+Suites can be nested as deep as you like.
+
+    suite "All tests"
+      [ someClaim
+      , suite "Regression tests" listOfClaims
+      ]
 -}
 suite : String -> List Claim -> Claim
 suite name claims =
