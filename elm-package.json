@@ -1,7 +1,7 @@
 {
-    "version": "3.0.0",
+    "version": "1.0.0",
     "summary": "Property-based testing in Elm",
-    "repository": "https://github.com/NoRedInk/elm-check.git",
+    "repository": "https://github.com/elm-community/elm-check.git",
     "license": "MIT",
     "source-directories": [
         "src"
@@ -12,11 +12,11 @@
         "Check.Test"
     ],
     "dependencies": {
-        "NoRedInk/elm-lazy-list": "2.0.0 <= v < 3.0.0",
-        "NoRedInk/elm-random-extra": "2.0.0 <= v < 3.0.0",
-        "NoRedInk/elm-shrink": "1.0.3 <= v < 2.0.0",
-        "deadfoxygrandpa/elm-test": "3.1.1 <= v < 4.0.0",
-        "elm-lang/core": "3.0.0 <= v < 4.0.0"
+        "elm-community/elm-lazy-list": "1.0.0 <= v < 2.0.0",
+        "elm-community/elm-random-extra": "1.0.0 <= v < 2.0.0",
+        "elm-community/elm-shrink": "1.0.0 <= v < 2.0.0",
+        "elm-community/elm-test": "1.0.0 <= v < 2.0.0",
+        "elm-lang/core": "4.0.0 <= v < 5.0.0"
     },
-    "elm-version": "0.16.0 <= v < 0.17.0"
+    "elm-version": "0.17.0 <= v < 0.18.0"
 }

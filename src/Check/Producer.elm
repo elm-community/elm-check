@@ -1,4 +1,4 @@
-module Check.Producer (..) where
+module Check.Producer exposing (..)
 
 {-| This is a library of `Producer`s you can use to supply values to your tests.
 You can typically pick out which ones you need according to their types.

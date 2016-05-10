@@ -1,4 +1,4 @@
-module Check (..) where
+module Check exposing (..)
 
 {-|
 
