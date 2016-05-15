@@ -12,7 +12,7 @@
         "Check.Test"
     ],
     "dependencies": {
-        "elm-community/elm-shrink": "1.0.0 <= v < 2.0.0",
+        "elm-community/shrink": "1.0.0 <= v < 2.0.0",
         "elm-community/elm-lazy-list": "1.0.0 <= v < 2.0.0",
         "elm-community/elm-random-extra": "1.0.0 <= v < 3.0.0",
         "elm-community/elm-test": "1.1.0 <= v < 2.0.0",

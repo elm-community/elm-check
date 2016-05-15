@@ -40,9 +40,9 @@ import Random.Array
 
 {-| An Producer type is a
 [Random](http://package.elm-lang.org/packages/elm-lang/core/latest/Random)
-`Generator` paired with a shrinking strategy, or Shrinker. Shrinkers are defined
+`Generator` paired with a shrinking strategy, or `Shrinker`. Shrinkers are defined
 in
-[`elm-shrink`](http://package.elm-lang.org/packages/NoRedInk/elm-shrink/latest/).
+[`elm-community/shrink`](http://package.elm-lang.org/packages/elm-community/shrink/latest/).
 -}
 type alias Producer a =
     { generator : Generator a
