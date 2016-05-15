@@ -1,7 +1,7 @@
 {
-    "version": "3.0.0",
+    "version": "1.0.0",
     "summary": "Property-based testing in Elm",
-    "repository": "https://github.com/NoRedInk/elm-check.git",
+    "repository": "https://github.com/elm-community/elm-check.git",
     "license": "MIT",
     "source-directories": [
         "src"
