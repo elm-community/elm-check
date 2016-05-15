@@ -1,4 +1,4 @@
-module Check.Test (evidenceToTest) where
+module Check.Test exposing (evidenceToTest)
 
 {-| This module provides integration with
 [`elm-test`](http://package.elm-lang.org/packages/deadfoxygrandpa/elm-test/latest/).
@@ -18,22 +18,29 @@ of unit tests.
 -}
 evidenceToTest : Check.Evidence -> ElmTest.Test
 evidenceToTest evidence =
-  case evidence of
-    Check.Multiple name more ->
-      ElmTest.suite name (List.map evidenceToTest more)
+    case evidence of
+        Check.Multiple name more ->
+            ElmTest.suite name (List.map evidenceToTest more)
 
-    Check.Unit (Ok { name, numberOfChecks }) ->
-      ElmTest.test (name ++ " [" ++ nChecks numberOfChecks ++ "]") ElmTest.pass
+        Check.Unit (Ok { name, numberOfChecks }) ->
+            ElmTest.test (name ++ " [" ++ nChecks numberOfChecks ++ "]") ElmTest.pass
 
-    Check.Unit (Err { name, numberOfChecks, expected, actual, counterExample }) ->
-      ElmTest.test name <| ElmTest.fail
-        <| "\nOn check " ++ toString numberOfChecks ++ ", found counterexample: "
-        ++ counterExample ++ "\nExpected:   " ++ expected ++ "\nBut It Was: " ++ actual
+        Check.Unit (Err { name, numberOfChecks, expected, actual, counterExample }) ->
+            ElmTest.test name
+                <| ElmTest.fail
+                <| "\nOn check "
+                ++ toString numberOfChecks
+                ++ ", found counterexample: "
+                ++ counterExample
+                ++ "\nExpected:   "
+                ++ expected
+                ++ "\nBut It Was: "
+                ++ actual
 
 
 nChecks : Int -> String
 nChecks n =
-  if n == 1 then
-    "1 check"
-  else
-    toString n ++ " checks"
+    if n == 1 then
+        "1 check"
+    else
+        toString n ++ " checks"
