@@ -41,8 +41,51 @@ import Random.Array
 {-| An Producer type is a
 [Random](http://package.elm-lang.org/packages/elm-lang/core/latest/Random)
 `Generator` paired with a shrinking strategy, or `Shrinker`. Shrinkers are defined
-in
-[`elm-community/shrink`](http://package.elm-lang.org/packages/elm-community/shrink/latest/).
+in [`elm-community/shrink`](http://package.elm-lang.org/packages/elm-community/shrink/latest/).
+You will need to be familiar with both libraries to write custom producers for your own types.
+Here is an example for a record:
+
+```elm
+type alias Position =
+    { x : Int, y : Int }
+
+
+position : Producer Position
+position =
+    Producer
+        (Random.map2 Position (Random.int 0 1919) (Random.int 0 1079))
+        (\{ x, y } -> Shrink.map Position (Shrink.int x) `Shrink.andMap` (Shrink.int y))
+```
+
+Here is an example for a union type.
+
+```elm
+type Question
+    = Name String
+    | Age Int
+
+
+question =
+    let
+        generator =
+            Random.bool `Random.andThen` (\b ->
+                if b then
+                    Random.map Name string.generator
+                else
+                    Random.map Age (Random.int 0 120)
+             )
+
+        shrinker q =
+            case q of
+                Name n ->
+                    Shrink.string n |> Shrink.map Name
+
+                Age i ->
+                    Shrink.int i |> Shrink.map Age
+    in
+        Producer generator shrinker
+```
+
 -}
 type alias Producer a =
     { generator : Generator a
@@ -286,7 +329,7 @@ convert f g prod =
 
 
 {-| Map a function over an producer. This works exactly like `convert`,
-except it does not require an invderse function, and consequently does no
+except it does not require an inverse function, and consequently does no
 shrinking.
 -}
 map : (a -> b) -> Producer a -> Producer b
