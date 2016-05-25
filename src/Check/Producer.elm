@@ -205,21 +205,38 @@ result errSpec valSpec =
 
 
 {-| Given a producer of a type, create a producer of a list of that type.
-Generates random lists of values of length between 0 and 10.
+Generates random lists of varying length, favoring shorter lists.
 -}
 list : Producer a -> Producer (List a)
 list prod =
-    Producer (Random.List.rangeLengthList 0 10 prod.generator)
-        -- TODO possibly have longer lists?
+    Producer
+        (Random.Extra.frequency
+            [ ( 1, Random.Extra.constant [] )
+            , ( 1, Random.map (\x -> [ x ]) prod.generator )
+            , ( 3, Random.List.rangeLengthList 2 10 prod.generator )
+            , ( 2, Random.List.rangeLengthList 10 100 prod.generator )
+            , ( 0.5, Random.List.rangeLengthList 100 400 prod.generator )
+            ]
+            (Random.Extra.constant [])
+        )
         (Shrink.list prod.shrinker)
 
 
 {-| Given a producer of a type, create a producer of an array of that type.
-Generates random arrays of values of length between 0 and 10.
+Generates random arrays of varying length, favoring shorter arrays.
 -}
 array : Producer a -> Producer (Array a)
 array prod =
-    Producer (Random.Array.rangeLengthArray 0 10 prod.generator)
+    Producer
+        (Random.Extra.frequency
+            [ ( 1, Random.Extra.constant Array.empty )
+            , ( 1, Random.map (Array.repeat 1) prod.generator )
+            , ( 3, Random.Array.rangeLengthArray 2 10 prod.generator )
+            , ( 2, Random.Array.rangeLengthArray 10 100 prod.generator )
+            , ( 0.5, Random.Array.rangeLengthArray 100 400 prod.generator )
+            ]
+            (Random.Extra.constant Array.empty)
+        )
         (Shrink.array prod.shrinker)
 
 
