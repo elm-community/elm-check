@@ -1,5 +1,5 @@
 {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "summary": "Property-based testing in Elm",
     "repository": "https://github.com/elm-community/elm-check.git",
     "license": "MIT",
@@ -12,10 +12,10 @@
         "Check.Test"
     ],
     "dependencies": {
-        "elm-community/shrink": "1.0.0 <= v < 2.0.0",
         "elm-community/elm-lazy-list": "1.0.0 <= v < 2.0.0",
         "elm-community/elm-random-extra": "1.0.1 <= v < 3.0.0",
         "elm-community/elm-test": "1.1.0 <= v < 2.0.0",
+        "elm-community/shrink": "1.0.0 <= v < 2.0.0",
         "elm-lang/core": "4.0.0 <= v < 5.0.0",
         "elm-lang/trampoline": "1.0.0 <= v < 2.0.0"
     },
