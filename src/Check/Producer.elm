@@ -72,8 +72,8 @@ Here is an example for a union type:
                         Random.map Age (Random.int 0 120)
                  )
 
-            shrinker q =
-                case q of
+            shrinker question =
+                case question of
                     Name n ->
                         Shrink.string n |> Shrink.map Name
 
@@ -136,7 +136,7 @@ rangeInt min max =
         (Shrink.keepIf (\i -> i >= min && i <= max) Shrink.int)
 
 
-{-| A producer for float values. NaN and ±Infinity will not be produced.
+{-| A producer for float values. It will never produce `NaN`, `Infinity`, or `-Infinity`.
 -}
 float : Producer Float
 float =
