@@ -45,47 +45,42 @@ in [`elm-community/shrink`](http://package.elm-lang.org/packages/elm-community/s
 You will need to be familiar with both libraries to write custom producers for your own types.
 Here is an example for a record:
 
-```elm
-type alias Position =
-    { x : Int, y : Int }
+    type alias Position =
+        { x : Int, y : Int }
 
 
-position : Producer Position
-position =
-    Producer
-        (Random.map2 Position (Random.int 0 1919) (Random.int 0 1079))
-        (\{ x, y } -> Shrink.map Position (Shrink.int x) `Shrink.andMap` (Shrink.int y))
-```
+    position : Producer Position
+    position =
+        Producer
+            (Random.map2 Position (Random.int 0 1919) (Random.int 0 1079))
+            (\{ x, y } -> Shrink.map Position (Shrink.int x) `Shrink.andMap` (Shrink.int y))
 
-Here is an example for a union type.
+Here is an example for a union type:
 
-```elm
-type Question
-    = Name String
-    | Age Int
+    type Question
+        = Name String
+        | Age Int
 
 
-question =
-    let
-        generator =
-            Random.bool `Random.andThen` (\b ->
-                if b then
-                    Random.map Name string.generator
-                else
-                    Random.map Age (Random.int 0 120)
-             )
+    question =
+        let
+            generator =
+                Random.bool `Random.andThen` (\b ->
+                    if b then
+                        Random.map Name string.generator
+                    else
+                        Random.map Age (Random.int 0 120)
+                 )
 
-        shrinker q =
-            case q of
-                Name n ->
-                    Shrink.string n |> Shrink.map Name
+            shrinker q =
+                case q of
+                    Name n ->
+                        Shrink.string n |> Shrink.map Name
 
-                Age i ->
-                    Shrink.int i |> Shrink.map Age
-    in
-        Producer generator shrinker
-```
-
+                    Age i ->
+                        Shrink.int i |> Shrink.map Age
+        in
+            Producer generator shrinker
 -}
 type alias Producer a =
     { generator : Generator a
