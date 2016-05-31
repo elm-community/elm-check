@@ -32,9 +32,6 @@ import Random.Extra
 import Random.Order
 import Random.Char
 import Random.String
-import Random.Maybe
-import Random.Result
-import Random.List
 import Random.Array
 
 
@@ -122,7 +119,6 @@ int =
                 , ( 1, Random.int 0 (Random.maxInt - Random.minInt) )
                 , ( 1, Random.int (Random.minInt - Random.maxInt) 0 )
                 ]
-                (Random.int -50 50)
     in
         Producer generator Shrink.int
 
@@ -149,7 +145,6 @@ float =
                 , ( 1, Random.float 0 (toFloat <| Random.maxInt - Random.minInt) )
                 , ( 1, Random.float (toFloat <| Random.minInt - Random.maxInt) 0 )
                 ]
-                (Random.float -50 50)
     in
         Producer generator Shrink.float
 
@@ -175,7 +170,6 @@ percentage =
                 , ( 1, Random.Extra.constant 0 )
                 , ( 1, Random.Extra.constant 1 )
                 ]
-                (Random.float 0 1)
     in
         Producer generator Shrink.float
 
@@ -229,17 +223,20 @@ string =
 -}
 maybe : Producer a -> Producer (Maybe a)
 maybe prod =
-    Producer (Random.Maybe.maybe prod.generator)
-        (Shrink.maybe prod.shrinker)
+    let
+        genBool =
+            Random.map not <| Random.Extra.oneIn 4
+    in
+        Producer (Random.Extra.maybe genBool prod.generator) (Shrink.maybe prod.shrinker)
 
 
 {-| Given producers for an error type and a success type, createa a producer for
 a result.
 -}
 result : Producer error -> Producer value -> Producer (Result error value)
-result errSpec valSpec =
-    Producer (Random.Result.result errSpec.generator valSpec.generator)
-        (Shrink.result errSpec.shrinker valSpec.shrinker)
+result errProd valProd =
+    Producer (Random.Extra.result Random.bool errProd.generator valProd.generator)
+        (Shrink.result errProd.shrinker valProd.shrinker)
 
 
 {-| Given a producer of a type, create a producer of a list of that type.
@@ -251,11 +248,10 @@ list prod =
         (Random.Extra.frequency
             [ ( 1, Random.Extra.constant [] )
             , ( 1, Random.map (\x -> [ x ]) prod.generator )
-            , ( 3, Random.List.rangeLengthList 2 10 prod.generator )
-            , ( 2, Random.List.rangeLengthList 10 100 prod.generator )
-            , ( 0.5, Random.List.rangeLengthList 100 400 prod.generator )
+            , ( 3, Random.Extra.rangeLengthList 2 10 prod.generator )
+            , ( 2, Random.Extra.rangeLengthList 10 100 prod.generator )
+            , ( 0.5, Random.Extra.rangeLengthList 100 400 prod.generator )
             ]
-            (Random.Extra.constant [])
         )
         (Shrink.list prod.shrinker)
 
@@ -273,7 +269,6 @@ array prod =
             , ( 2, Random.Array.rangeLengthArray 10 100 prod.generator )
             , ( 0.5, Random.Array.rangeLengthArray 100 400 prod.generator )
             ]
-            (Random.Extra.constant Array.empty)
         )
         (Shrink.array prod.shrinker)
 
@@ -282,7 +277,7 @@ array prod =
 -}
 tuple : ( Producer a, Producer b ) -> Producer ( a, b )
 tuple ( prodA, prodB ) =
-    Producer (Random.Extra.zip prodA.generator prodB.generator)
+    Producer (Random.map2 (,) prodA.generator prodB.generator)
         (Shrink.tuple ( prodA.shrinker, prodB.shrinker ))
 
 
@@ -290,7 +285,7 @@ tuple ( prodA, prodB ) =
 -}
 tuple3 : ( Producer a, Producer b, Producer c ) -> Producer ( a, b, c )
 tuple3 ( prodA, prodB, prodC ) =
-    Producer (Random.Extra.zip3 prodA.generator prodB.generator prodC.generator)
+    Producer (Random.map3 (,,) prodA.generator prodB.generator prodC.generator)
         (Shrink.tuple3 ( prodA.shrinker, prodB.shrinker, prodC.shrinker ))
 
 
@@ -298,7 +293,7 @@ tuple3 ( prodA, prodB, prodC ) =
 -}
 tuple4 : ( Producer a, Producer b, Producer c, Producer d ) -> Producer ( a, b, c, d )
 tuple4 ( prodA, prodB, prodC, prodD ) =
-    Producer (Random.Extra.zip4 prodA.generator prodB.generator prodC.generator prodD.generator)
+    Producer (Random.map4 (,,,) prodA.generator prodB.generator prodC.generator prodD.generator)
         (Shrink.tuple4 ( prodA.shrinker, prodB.shrinker, prodC.shrinker, prodD.shrinker ))
 
 
@@ -306,7 +301,7 @@ tuple4 ( prodA, prodB, prodC, prodD ) =
 -}
 tuple5 : ( Producer a, Producer b, Producer c, Producer d, Producer e ) -> Producer ( a, b, c, d, e )
 tuple5 ( prodA, prodB, prodC, prodD, prodE ) =
-    Producer (Random.Extra.zip5 prodA.generator prodB.generator prodC.generator prodD.generator prodE.generator)
+    Producer (Random.map5 (,,,,) prodA.generator prodB.generator prodC.generator prodD.generator prodE.generator)
         (Shrink.tuple5 ( prodA.shrinker, prodB.shrinker, prodC.shrinker, prodD.shrinker, prodE.shrinker ))
 
 
@@ -316,7 +311,7 @@ must be satisfiable.
 -}
 filter : (a -> Bool) -> Producer a -> Producer a
 filter predicate prod =
-    Producer (Random.Extra.keepIf predicate prod.generator)
+    Producer (Random.Extra.filter predicate prod.generator)
         (Shrink.keepIf predicate prod.shrinker)
 
 
