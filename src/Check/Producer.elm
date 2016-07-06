@@ -382,4 +382,4 @@ oneOf ps =
         generator = ps |> List.map toGenAndShrinker |> Random.Extra.choices
         -- Shrinker (a, Shrinker a)
         shrinker (a, subshrinker) = subshrinker a |> Lazy.List.map (\a' -> (a', subshrinker))
-    in Producer generator shrinker |> map (\(a, s) -> a)
+    in Producer generator shrinker |> map fst
