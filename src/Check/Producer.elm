@@ -8,14 +8,14 @@ randomly, and it can shrink them to more minimal values. Producers can be
 filtered and mapped over.
 
 # Common Producers
-@docs bool, int, rangeInt, float, rangeFloat, percentage, string, maybe, result, list, array
+@docs bool, int, rangeInt, float, rangeFloat, percentage, string, maybe, result, list, array, const
 
 ## Tuple Producers
 If your expected and actual functions need more than one input, pass them in as a tuple.
 @docs tuple, tuple3, tuple4, tuple5
 
 # Working with Producers
-@docs Producer, filter, convert, map
+@docs Producer, filter, convert, map, oneOf
 
 # Uncommon Producers
 @docs unit, order
@@ -33,6 +33,7 @@ import Random.Order
 import Random.Char
 import Random.String
 import Random.Array
+import Lazy.List
 
 
 {-| An Producer type is a
@@ -90,7 +91,14 @@ used as a placeholder.
 -}
 unit : Producer ()
 unit =
-    Producer (Random.Extra.constant ()) Shrink.noShrink
+    const ()
+
+
+{-| A producer that will always produce the same value.
+-}
+const : a -> Producer a
+const a =
+    Producer (Random.Extra.constant a) Shrink.noShrink
 
 
 {-| A producer for bool values.
@@ -343,3 +351,35 @@ map : (a -> b) -> Producer a -> Producer b
 map f prod =
     Producer (Random.map f prod.generator)
         Shrink.noShrink
+
+
+{-| Creates a Producer which, when asked to produce a value, will delegate
+to one of the Producers in the input list with equal probability.
+
+This method is useful for creating Producers for composite types. For example:
+
+```elm
+type Example =
+  Foo
+  | Bar Int
+  | Baz String
+
+exampleProducer : Producer Example
+exampleProducer =
+  oneOf [ const Foo
+        , int |> map Bar
+        , string |> map Baz
+        ]
+```
+-}
+oneOf : List (Producer a) -> Producer a
+oneOf ps =
+    let -- Producer a -> Generator (a, Shrinker a)
+        -- Given a `Producer a` get a Generator that produces pairs consisting of
+        -- a value and a shrinker to apply to that value
+        toGenAndShrinker p = p.generator |> Random.map (\a -> (a, p.shrinker))
+        -- Generator (a, Shrinker a)
+        generator = ps |> List.map toGenAndShrinker |> Random.Extra.choices
+        -- Shrinker (a, Shrinker a)
+        shrinker (a, subshrinker) = subshrinker a |> Lazy.List.map (\a' -> (a', subshrinker))
+    in Producer generator shrinker |> map (\(a, s) -> a)
