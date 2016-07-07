@@ -356,6 +356,8 @@ map f prod =
 {-| Creates a Producer which, when asked to produce a value, will delegate
 to one of the Producers in the input list with equal probability.
 
+Note that the resulting Producer will do no shrinking.
+
 This method is useful for creating Producers for composite types. For example:
 
 ```elm
@@ -374,12 +376,5 @@ exampleProducer =
 -}
 oneOf : List (Producer a) -> Producer a
 oneOf ps =
-    let -- Producer a -> Generator (a, Shrinker a)
-        -- Given a `Producer a` get a Generator that produces pairs consisting of
-        -- a value and a shrinker to apply to that value
-        toGenAndShrinker p = p.generator |> Random.map (\a -> (a, p.shrinker))
-        -- Generator (a, Shrinker a)
-        generator = ps |> List.map toGenAndShrinker |> Random.Extra.choices
-        -- Shrinker (a, Shrinker a)
-        shrinker (a, subshrinker) = subshrinker a |> Lazy.List.map (\a' -> (a', subshrinker))
-    in Producer generator shrinker |> map fst
+    let generator = ps |> List.map (\p -> p.generator) |> Random.Extra.choices
+    in Producer generator Shrink.noShrink
