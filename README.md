@@ -1,5 +1,7 @@
 # Property Based Testing in Elm with elm-check
 
+> This package is **deprecated**. Use `elm-test`'s fuzz tests instead.
+
 Traditional unit-testing consists in asserting that certain inputs yield certain outputs. Property-based testing makes
 claims relating input and output. These claims can then be automatically tested over as many randomly-generated inputs
 as desired. If a failing input is found, it can be "shrunk" to compute a minimal failing case which is more

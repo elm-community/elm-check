@@ -1,6 +1,6 @@
 {
-    "version": "1.0.2",
-    "summary": "Property-based testing in Elm",
+    "version": "2.0.0",
+    "summary": "[deprecated] Property-based testing in Elm",
     "repository": "https://github.com/elm-community/elm-check.git",
     "license": "MIT",
     "source-directories": [
