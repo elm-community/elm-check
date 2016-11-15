@@ -47,7 +47,7 @@ with `elm-check`'s runners.
 @docs Evidence, UnitEvidence, SuccessOptions, FailureOptions
 -}
 
-import Lazy.List
+import Lazy.List exposing (LazyList)
 import Random exposing (Seed, Generator)
 import Trampoline exposing (Trampoline(..))
 import Check.Producer exposing (Producer)
@@ -133,10 +133,10 @@ claim name actualStatement expectedStatement producer =
     -- 3. Else, shrink the counter example to a minimal representation
     -- 4. Return a failure.
     -------------------------------------------------------------------
-    Claim name
-        <| -- A Claim is just a function that takes a number of checks
-           -- and a random seed and returns an `Evidence` object
-           \numberOfChecks seed ->
+    Claim name <|
+        -- A Claim is just a function that takes a number of checks
+        -- and a random seed and returns an `Evidence` object
+        \numberOfChecks seed ->
             -- `numberOfChecks` is the given number of checks which is usually
             -- passed in by the `check` function. This sets an upper bound on
             -- the number of checks performed in order to find a counter example
@@ -150,10 +150,10 @@ claim name actualStatement expectedStatement producer =
                 -- This counter example, if found, will later be shrunk into a more
                 -- minimal version, hence "original".
                 -- Note that since finding a counter example is a recursive process,
-                -- trampolines are used. `originalCounterExample'` returns a
+                -- trampolines are used. `findOriginalCounterExample` returns a
                 -- trampoline.
-                -- originalCounterExample' : Seed -> Int -> Trampoline (Result (a, b, b, Seed, Int) Int)
-                originalCounterExample' seed currentNumberOfChecks =
+                findOriginalCounterExample : Seed -> Int -> Trampoline (Result ( a, b, b, Seed, Int ) Int)
+                findOriginalCounterExample seed currentNumberOfChecks =
                     if currentNumberOfChecks >= numberOfChecks then
                         ------------------------------------------------------------------
                         -- Stopping Condition:
@@ -187,13 +187,13 @@ claim name actualStatement expectedStatement producer =
                                 expectedStatement value
                         in
                             if actual == expected then
-                                Trampoline.jump (\() -> originalCounterExample' nextSeed (currentNumberOfChecks + 1))
+                                Trampoline.jump (\() -> findOriginalCounterExample nextSeed (currentNumberOfChecks + 1))
                             else
                                 Trampoline.done (Err ( value, actual, expected, nextSeed, currentNumberOfChecks + 1 ))
 
-                -- originalCounterExample : Result (a, b, b, Seed, Int) Int
+                originalCounterExample : Result ( a, b, b, Seed, Int ) Int
                 originalCounterExample =
-                    Trampoline.evaluate (originalCounterExample' seed 0)
+                    Trampoline.evaluate (findOriginalCounterExample seed 0)
             in
                 case originalCounterExample of
                     ------------------------------------------------------------
@@ -202,8 +202,8 @@ claim name actualStatement expectedStatement producer =
                     -- number of checks performed.
                     ------------------------------------------------------------
                     Ok numberOfChecks ->
-                        Unit
-                            <| Ok
+                        Unit <|
+                            Ok
                                 { name = name
                                 , seed = seed
                                 , numberOfChecks = max 0 numberOfChecks
@@ -235,13 +235,13 @@ claim name actualStatement expectedStatement producer =
                                 let
                                     -- Produce a list of values considered more minimal that
                                     -- the given `counterExample`.
-                                    -- shrunkenCounterExamples : List a
+                                    shrunkenCounterExamples : LazyList a
                                     shrunkenCounterExamples =
                                         producer.shrinker counterExample
 
                                     -- Keep only the counter examples that disprove the claim.
                                     -- (i.e. they violate `actual == expected`)
-                                    -- failingShrunkenCounterExamples : List a
+                                    failingShrunkenCounterExamples : LazyList a
                                     failingShrunkenCounterExamples =
                                         Lazy.List.keepIf
                                             (\shrunk ->
@@ -273,11 +273,11 @@ claim name actualStatement expectedStatement producer =
                             ( minimal, numberOfShrinks ) =
                                 Trampoline.evaluate (shrink originalCounterExample 0)
 
-                            -- actual : b
+                            actual : b
                             actual =
                                 actualStatement minimal
 
-                            -- expected : b
+                            expected : b
                             expected =
                                 expectedStatement minimal
                         in
@@ -289,8 +289,8 @@ claim name actualStatement expectedStatement producer =
                             -- find the counter example, the number of checks performed to find
                             -- the counter example, and the number of shrinking operations
                             -- performed.
-                            Unit
-                                <| Err
+                            Unit <|
+                                Err
                                     { name = name
                                     , seed = seed
                                     , counterExample = toString minimal
